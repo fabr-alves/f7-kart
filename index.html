@@ -116,7 +116,7 @@
         <div class="card">
             <h3>🥇 Líder do Campeonato</h3>
             <div class="value" id="dash-leader">---</div>
-            <div class="subtitle" id="dash-leader-pts">0 pts</div>
+            <div class="subtitle" id="dash-leader-pts">0 pts totais</div>
         </div>
         <div class="card">
             <h3>📈 Maior Vencedor</h3>
@@ -136,16 +136,13 @@
     </div>
 
     <div class="main-content">
-        <!-- Esquerda -->
         <div>
             <div class="card">
                 <h3>Classificação Geral</h3>
                 <div class="info-box">
-                    <strong>Regras Oficiais:</strong> Vence quem tem <strong>MAIS</strong> pontos acumulados.<br>
-                    <strong>Pontuação:</strong> 1º = 20 pts, 2º = 19 pts, etc. <br>
-                    <strong>Pódio:</strong> Os 5 primeiros colocados sobem ao pódio.<br>
-                    <strong>Bônus:</strong> A Melhor Volta da corrida concede <strong>+1 ponto extra</strong>.<br>
-                    <strong>Ausências:</strong> 0 pontos. Todos os pontos conquistados são somados (sem descartes).
+                    <strong>Super Bônus F7:</strong> Vence quem tem <strong>MAIS</strong> Pontos Totais.<br>
+                    <strong>Pontos Totais:</strong> É a soma dos Pontos da Corrida + nº de Vitórias + nº de Pódios + nº de Voltas Rápidas.<br>
+                    <strong>Pontos da Corrida:</strong> 1º = 20 pts, 2º = 19 pts, etc. (+1 pt base por melhor volta).
                 </div>
                 <div style="overflow-x: auto;">
                     <table>
@@ -153,7 +150,8 @@
                             <tr>
                                 <th>Pos</th>
                                 <th>Piloto</th>
-                                <th>Pontos</th>
+                                <th style="color: var(--accent);">Pontos Totais</th>
+                                <th>Pts da Corrida</th>
                                 <th>Vitórias</th>
                                 <th>Pódios (Top 5)</th>
                                 <th>Voltas Rápidas</th>
@@ -164,7 +162,6 @@
                 </div>
             </div>
 
-            <!-- Histórico Individual do Piloto -->
             <div class="card">
                 <h3>🔍 Histórico Detalhado do Piloto</h3>
                 <div class="form-group">
@@ -180,7 +177,7 @@
                                 <th>Bateria</th>
                                 <th>Data</th>
                                 <th>Posição</th>
-                                <th>Pontos Ganhos</th>
+                                <th>Pts da Corrida</th>
                                 <th>Melhor Volta?</th>
                             </tr>
                         </thead>
@@ -194,7 +191,7 @@
             </div>
 
             <div class="card">
-                <h3>Evolução de Pontos</h3>
+                <h3>Evolução de Pontos (Totais)</h3>
                 <div class="chart-container">
                     <canvas id="evolutionChart"></canvas>
                 </div>
@@ -209,7 +206,7 @@
                                 <th>Bateria</th>
                                 <th>Data</th>
                                 <th>Vencedor (1º)</th>
-                                <th>Melhor Volta (+1 Pt)</th>
+                                <th>Melhor Volta</th>
                                 <th>Ação</th>
                             </tr>
                         </thead>
@@ -219,7 +216,6 @@
             </div>
         </div>
 
-        <!-- Direita -->
         <div>
             <div class="card">
                 <h3>Adicionar Novo Piloto</h3>
@@ -422,7 +418,7 @@
 
     function calcularEstatisticas() {
         const stats = {};
-        pilotos.forEach(p => stats[p] = { nome: p, pontos: 0, vitorias: 0, podios: 0, voltasRapidas: 0 });
+        pilotos.forEach(p => stats[p] = { nome: p, pontosBase: 0, vitorias: 0, podios: 0, voltasRapidas: 0, pontosSuperTotais: 0 });
 
         corridas.forEach((corrida) => {
             pilotos.forEach(p => {
@@ -434,14 +430,20 @@
                     stats[p].voltasRapidas++;
                 }
 
-                stats[p].pontos += pts;
+                stats[p].pontosBase += pts;
                 if (pos === 1) stats[p].vitorias++;
                 if (pos >= 1 && pos <= 5) stats[p].podios++; 
             });
         });
 
+        // Nova Regra: Pontos Super Totais = Pontos da Corrida + Vitorias + Podios + Voltas Rápidas
+        Object.values(stats).forEach(s => {
+            s.pontosSuperTotais = s.pontosBase + s.vitorias + s.podios + s.voltasRapidas;
+        });
+
+        // Ordena pelo Super Total, e usa os outros como desempate
         return Object.values(stats).sort((a, b) => {
-            if (a.pontos !== b.pontos) return b.pontos - a.pontos; 
+            if (a.pontosSuperTotais !== b.pontosSuperTotais) return b.pontosSuperTotais - a.pontosSuperTotais; 
             if (a.vitorias !== b.vitorias) return b.vitorias - a.vitorias; 
             if (a.podios !== b.podios) return b.podios - a.podios; 
             return b.voltasRapidas - a.voltasRapidas; 
@@ -506,7 +508,8 @@
                 <tr>
                     <td class="${medalha}">${index + 1}º</td>
                     <td style="font-weight: 500;">${p.nome}</td>
-                    <td style="font-weight: bold; color: var(--accent); font-size: 16px;">${p.pontos}</td>
+                    <td style="font-weight: bold; color: var(--accent); font-size: 16px;">${p.pontosSuperTotais}</td>
+                    <td style="color: var(--text-muted);">${p.pontosBase}</td>
                     <td>${p.vitorias}</td>
                     <td>${p.podios}</td>
                     <td>${p.voltasRapidas}</td>
@@ -537,7 +540,7 @@
             });
 
             document.getElementById('dash-leader').innerText = rank[0].nome;
-            document.getElementById('dash-leader-pts').innerText = `${rank[0].pontos} pts`;
+            document.getElementById('dash-leader-pts').innerText = `${rank[0].pontosSuperTotais} pts totais`;
 
             const maiorVencedor = [...rank].sort((a, b) => b.vitorias - a.vitorias)[0];
             document.getElementById('dash-wins').innerText = maiorVencedor.vitorias > 0 ? maiorVencedor.nome : "---";
@@ -564,7 +567,12 @@
             const data = corridas.map(c => {
                 const pos = c.resultados[piloto];
                 let pts = (pos && pos <= 20) ? (21 - pos) : 0;
-                if (c.melhorVolta && c.melhorVolta.piloto === piloto) pts += 1;
+                
+                // Pontos na corrida + Super Bônus por etapa
+                if (c.melhorVolta && c.melhorVolta.piloto === piloto) pts += 2; // +1 base, +1 bônus estátistica
+                if (pos === 1) pts += 1;
+                if (pos >= 1 && pos <= 5) pts += 1;
+                
                 acumulado += pts;
                 return acumulado;
             });
@@ -598,7 +606,7 @@
                         beginAtZero: true, 
                         suggestedMax: datasets.length > 0 ? Math.max(...datasets.flatMap(d => d.data)) + 5 : 20, 
                         grid: { color: '#f2f2f7', drawBorder: false },
-                        title: { display: true, text: 'Pontos Acumulados'} 
+                        title: { display: true, text: 'Pontos Totais (Com Bônus)'} 
                     },
                     x: { grid: { display: false } }
                 }, 
@@ -615,10 +623,7 @@
                         usePointStyle: true, 
                         titleFont: { size: 14, weight: 'bold' }, 
                         bodyFont: { size: 13 },
-                        // NOVA REGRA: Ordena o popup do maior para o menor ponto
-                        itemSort: function(a, b) {
-                            return b.raw - a.raw;
-                        }
+                        itemSort: function(a, b) { return b.raw - a.raw; }
                     }
                 } 
             }
