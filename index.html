@@ -604,7 +604,22 @@
                 }, 
                 plugins: { 
                     legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { size: 12 } } },
-                    tooltip: { backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#1d1d1f', bodyColor: '#1d1d1f', borderColor: '#e5e5ea', borderWidth: 1, padding: 12, boxPadding: 6, usePointStyle: true, titleFont: { size: 14, weight: 'bold' }, bodyFont: { size: 13 } }
+                    tooltip: { 
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                        titleColor: '#1d1d1f', 
+                        bodyColor: '#1d1d1f', 
+                        borderColor: '#e5e5ea', 
+                        borderWidth: 1, 
+                        padding: 12, 
+                        boxPadding: 6, 
+                        usePointStyle: true, 
+                        titleFont: { size: 14, weight: 'bold' }, 
+                        bodyFont: { size: 13 },
+                        // NOVA REGRA: Ordena o popup do maior para o menor ponto
+                        itemSort: function(a, b) {
+                            return b.raw - a.raw;
+                        }
+                    }
                 } 
             }
         });
