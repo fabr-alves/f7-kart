@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Championship Dashboard - F1 Style</title>
     
-    <!-- Scripts do Chart.js e Firebase (Compat) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -142,9 +141,10 @@
             <div class="card">
                 <h3>Classificação Geral</h3>
                 <div class="info-box">
-                    <strong>Regras (Sistema F1):</strong> Vence quem tem <strong>MAIS</strong> pontos. <br>
-                    1º lugar ganha 20 pts, 2º ganha 19 pts, até o 20º que ganha 1 pt. <br>
-                    <strong>Pódio:</strong> Os 5 primeiros colocados sobem ao pódio. O pior resultado é descartado após 3 corridas.
+                    <strong>Regras Oficiais:</strong> Vence quem tem <strong>MAIS</strong> pontos acumulados.<br>
+                    <strong>Pontuação:</strong> 1º = 20 pts, 2º = 19 pts, etc. <br>
+                    <strong>Bônus:</strong> A Melhor Volta da corrida concede <strong>+1 ponto extra</strong>.<br>
+                    <strong>Ausências:</strong> 0 pontos. Todos os pontos conquistados são somados (sem descartes).
                 </div>
                 <div style="overflow-x: auto;">
                     <table>
@@ -152,13 +152,42 @@
                             <tr>
                                 <th>Pos</th>
                                 <th>Piloto</th>
-                                <th>Pts Líquidos</th>
-                                <th>Pts Totais</th>
+                                <th>Pontos</th>
                                 <th>Vitórias</th>
-                                <th>Pódios (Top 5)</th>
+                                <th>Top 5</th>
+                                <th>Voltas Rápidas</th>
                             </tr>
                         </thead>
                         <tbody id="leaderboard-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- NOVO: Histórico Individual do Piloto -->
+            <div class="card">
+                <h3>🔍 Histórico Detalhado do Piloto</h3>
+                <div class="form-group">
+                    <label>Selecione um piloto para ver seu desempenho etapa por etapa:</label>
+                    <select id="select-historico-piloto" onchange="atualizarHistoricoPiloto()">
+                        <option value="">Selecione um piloto...</option>
+                    </select>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Bateria</th>
+                                <th>Data</th>
+                                <th>Posição</th>
+                                <th>Pontos Ganhos</th>
+                                <th>Melhor Volta?</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historico-piloto-body">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--text-muted);">Selecione um piloto acima.</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -171,7 +200,7 @@
             </div>
 
             <div class="card">
-                <h3>📋 Histórico de Corridas Registradas</h3>
+                <h3>📋 Histórico Geral de Corridas</h3>
                 <div style="overflow-x: auto;">
                     <table>
                         <thead>
@@ -179,7 +208,7 @@
                                 <th>Bateria</th>
                                 <th>Data</th>
                                 <th>Vencedor (1º)</th>
-                                <th>Melhor Volta</th>
+                                <th>Melhor Volta (+1 Pt)</th>
                                 <th>Ação</th>
                             </tr>
                         </thead>
@@ -212,7 +241,7 @@
                     <button class="btn-danger" style="margin-top: 0;" onclick="removePosicaoForm()">- Remover</button>
                 </div>
                 <div class="form-group" style="border-top: 1px solid var(--border); padding-top: 16px;">
-                    <label>Piloto da Melhor Volta</label>
+                    <label>Piloto da Melhor Volta (+1 Ponto Extra)</label>
                     <select id="best-lap-piloto" style="margin-bottom: 10px;">
                         <option value="">Ninguém/Não registrado</option>
                     </select>
@@ -227,7 +256,7 @@
 
 <script>
     // ==========================================
-    // 1. CONFIGURAÇÃO DO FIREBASE (Com as suas chaves)
+    // 1. CONFIGURAÇÃO DO FIREBASE
     // ==========================================
     const firebaseConfig = {
       apiKey: "AIzaSyBhiKl0SkfdQKIib6n9OVWtPeUodJJc3Js",
@@ -238,7 +267,6 @@
       appId: "1:611492919380:web:466b82efdf22f7cae9d5c1"
     };
 
-    // Inicializa o Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
@@ -250,13 +278,11 @@
     let chartInstance = null;
     let qtdPosicoesForm = 0;
 
-    // Escuta o banco de dados em tempo real
     db.collection("f7kart").doc("temporada1").onSnapshot((doc) => {
         if (doc.exists) {
             pilotos = doc.data().pilotos || [];
             corridas = doc.data().corridas || [];
         } else {
-            // Se o banco estiver vazio, cria os pilotos iniciais e salva
             pilotos = ["Fabrício", "Marcelino", "Souza", "Wanderley", "Douglas", "Lucas", "Perine"];
             corridas = [];
             salvarNoFirebase();
@@ -264,16 +290,15 @@
         
         document.getElementById('dash-pilotos').innerText = pilotos.length;
         
-        // Garante que o form de posições tenha pelo menos 5 campos ao carregar
         if (qtdPosicoesForm === 0) {
             for(let i=0; i<5; i++) addPosicaoForm();
         }
 
         atualizarSelectsFormulario();
         atualizarDashboard();
+        atualizarHistoricoPiloto();
     });
 
-    // Função central para salvar dados na nuvem
     function salvarNoFirebase() {
         db.collection("f7kart").doc("temporada1").set({
             pilotos: pilotos,
@@ -291,7 +316,7 @@
         
         pilotos.push(nome);
         document.getElementById('novo-piloto').value = '';
-        salvarNoFirebase(); // Manda pra nuvem
+        salvarNoFirebase(); 
     }
 
     function addPosicaoForm() {
@@ -333,6 +358,12 @@
         bestLap.innerHTML = `<option value="">Ninguém/Não registrado</option>` + 
                             pilotos.map(p => `<option value="${p}">${p}</option>`).join('');
         bestLap.value = valorBL;
+
+        const histSelect = document.getElementById('select-historico-piloto');
+        const currentHist = histSelect.value;
+        histSelect.innerHTML = `<option value="">Selecione um piloto...</option>` + 
+                               pilotos.map(p => `<option value="${p}">${p}</option>`).join('');
+        histSelect.value = currentHist;
     }
 
     function salvarCorrida() {
@@ -378,43 +409,90 @@
         document.getElementById('best-lap-piloto').value = "";
         document.getElementById('best-lap-tempo').value = "";
         
-        salvarNoFirebase(); // Manda pra nuvem
+        salvarNoFirebase();
     }
 
     function deletarCorrida(index) {
-        if(confirm("Tem certeza que deseja apagar esta corrida?")) {
+        if(confirm("⚠️ ATENÇÃO: Tem certeza que deseja APAGAR os dados desta corrida? Todos os pontos e gráficos do campeonato serão recalculados imediatamente.")) {
             corridas.splice(index, 1);
-            salvarNoFirebase(); // Atualiza na nuvem
+            salvarNoFirebase();
         }
     }
 
+    // Calcula os pontos TOTAIS e soma +1 para melhor volta
     function calcularEstatisticas() {
         const stats = {};
-        pilotos.forEach(p => stats[p] = { nome: p, pontosTotais: 0, pontosLiquidos: 0, vitorias: 0, podios: 0, historicoPts: [] });
+        pilotos.forEach(p => stats[p] = { nome: p, pontos: 0, vitorias: 0, podios: 0, voltasRapidas: 0 });
 
         corridas.forEach((corrida) => {
             pilotos.forEach(p => {
                 const pos = corrida.resultados[p]; 
                 let pts = (pos && pos <= 20) ? (21 - pos) : 0;
-                stats[p].pontosTotais += pts;
-                stats[p].historicoPts.push(pts);
+                
+                // Bônus de +1 Ponto pela Melhor Volta
+                if (corrida.melhorVolta && corrida.melhorVolta.piloto === p) {
+                    pts += 1;
+                    stats[p].voltasRapidas++;
+                }
+
+                stats[p].pontos += pts;
                 if (pos === 1) stats[p].vitorias++;
                 if (pos >= 1 && pos <= 5) stats[p].podios++; 
             });
         });
 
-        Object.values(stats).forEach(s => {
-            if (s.historicoPts.length >= 3) {
-                const piorResultado = Math.min(...s.historicoPts);
-                s.pontosLiquidos = s.pontosTotais - piorResultado;
-            } else {
-                s.pontosLiquidos = s.pontosTotais;
-            }
-        });
-
+        // Ordenação por Ponto Total e Critérios de Desempate
         return Object.values(stats).sort((a, b) => {
-            if (a.pontosLiquidos !== b.pontosLiquidos) return b.pontosLiquidos - a.pontosLiquidos;
-            return b.vitorias - a.vitorias;
+            if (a.pontos !== b.pontos) return b.pontos - a.pontos; // Maior pontuação
+            if (a.vitorias !== b.vitorias) return b.vitorias - a.vitorias; // Desempate 1: Mais vitórias
+            if (a.podios !== b.podios) return b.podios - a.podios; // Desempate 2: Mais Pódios
+            return b.voltasRapidas - a.voltasRapidas; // Desempate 3: Mais Voltas Rápidas
+        });
+    }
+
+    function atualizarHistoricoPiloto() {
+        const pilotoSelecionado = document.getElementById('select-historico-piloto').value;
+        const tbody = document.getElementById('historico-piloto-body');
+        tbody.innerHTML = '';
+
+        if (!pilotoSelecionado) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Selecione um piloto para ver o histórico.</td></tr>`;
+            return;
+        }
+
+        if (corridas.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhuma corrida registrada.</td></tr>`;
+            return;
+        }
+
+        corridas.forEach((c, index) => {
+            const pos = c.resultados[pilotoSelecionado];
+            let teveMelhorVolta = (c.melhorVolta && c.melhorVolta.piloto === pilotoSelecionado);
+
+            if (pos || teveMelhorVolta) {
+                let pts = (pos && pos <= 20) ? (21 - pos) : 0;
+                if (teveMelhorVolta) pts += 1;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: bold;">#${index + 1}</td>
+                        <td>${c.data}</td>
+                        <td>${pos ? pos + 'º Lugar' : 'Sem posição'}</td>
+                        <td style="font-weight: bold; color: var(--accent);">${pts} pts</td>
+                        <td style="color: ${teveMelhorVolta ? 'var(--gold)' : 'var(--text-muted)'};">${teveMelhorVolta ? '⭐ Sim (+1 pt)' : 'Não'}</td>
+                    </tr>
+                `;
+            } else {
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: bold;">#${index + 1}</td>
+                        <td>${c.data}</td>
+                        <td style="color: var(--danger);">Faltou</td>
+                        <td style="color: var(--text-muted);">0 pts</td>
+                        <td style="color: var(--text-muted);">Não</td>
+                    </tr>
+                `;
+            }
         });
     }
 
@@ -430,10 +508,10 @@
                 <tr>
                     <td class="${medalha}">${index + 1}º</td>
                     <td style="font-weight: 500;">${p.nome}</td>
-                    <td style="font-weight: bold; color: var(--accent);">${p.pontosLiquidos}</td>
-                    <td style="color: var(--text-muted);">${p.pontosTotais}</td>
+                    <td style="font-weight: bold; color: var(--accent); font-size: 16px;">${p.pontos}</td>
                     <td>${p.vitorias}</td>
                     <td>${p.podios}</td>
+                    <td>${p.voltasRapidas}</td>
                 </tr>
             `;
         });
@@ -461,7 +539,7 @@
             });
 
             document.getElementById('dash-leader').innerText = rank[0].nome;
-            document.getElementById('dash-leader-pts').innerText = `${rank[0].pontosLiquidos} pts`;
+            document.getElementById('dash-leader-pts').innerText = `${rank[0].pontos} pts`;
 
             const maiorVencedor = [...rank].sort((a, b) => b.vitorias - a.vitorias)[0];
             document.getElementById('dash-wins').innerText = maiorVencedor.vitorias > 0 ? maiorVencedor.nome : "---";
@@ -487,16 +565,50 @@
             let acumulado = 0;
             const data = corridas.map(c => {
                 const pos = c.resultados[piloto];
-                acumulado += (pos && pos <= 20) ? (21 - pos) : 0;
+                let pts = (pos && pos <= 20) ? (21 - pos) : 0;
+                if (c.melhorVolta && c.melhorVolta.piloto === piloto) pts += 1;
+                acumulado += pts;
                 return acumulado;
             });
-            return { label: piloto, data: data, borderColor: colors[i % colors.length], backgroundColor: colors[i % colors.length], tension: 0.3, fill: false };
+            return { 
+                label: piloto, 
+                data: data, 
+                borderColor: colors[i % colors.length], 
+                backgroundColor: '#ffffff',
+                borderWidth: 3, 
+                pointBorderColor: colors[i % colors.length],
+                pointBackgroundColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 5, 
+                pointHoverRadius: 7, 
+                tension: 0.2, 
+                fill: false 
+            };
         });
 
         if (chartInstance) chartInstance.destroy();
+        
         chartInstance = new Chart(ctx, {
-            type: 'line', data: { labels, datasets },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: 'Pontos Acumulados'} } }, plugins: { legend: { position: 'bottom' } } }
+            type: 'line', 
+            data: { labels, datasets },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                interaction: { mode: 'index', intersect: false },
+                scales: { 
+                    y: { 
+                        beginAtZero: true, 
+                        suggestedMax: datasets.length > 0 ? Math.max(...datasets.flatMap(d => d.data)) + 5 : 20, 
+                        grid: { color: '#f2f2f7', drawBorder: false },
+                        title: { display: true, text: 'Pontos Acumulados'} 
+                    },
+                    x: { grid: { display: false } }
+                }, 
+                plugins: { 
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { size: 12 } } },
+                    tooltip: { backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#1d1d1f', bodyColor: '#1d1d1f', borderColor: '#e5e5ea', borderWidth: 1, padding: 12, boxPadding: 6, usePointStyle: true, titleFont: { size: 14, weight: 'bold' }, bodyFont: { size: 13 } }
+                } 
+            }
         });
     }
 </script>
