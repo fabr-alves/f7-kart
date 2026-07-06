@@ -23,6 +23,7 @@
             --bronze: #CD7F32;
             --top5: #34c759;
             --danger: #ff3b30;
+            --success: #34c759;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,7 +40,7 @@
 
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.5px; }
-        .status-dot { height: 10px; width: 10px; background-color: #34c759; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .status-dot { height: 10px; width: 10px; background-color: var(--success); border-radius: 50%; display: inline-block; margin-right: 8px; }
         
         .dashboard-grid {
             display: grid;
@@ -102,6 +103,26 @@
         .pos-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
         .pos-row span { font-weight: bold; min-width: 30px; }
 
+        /* Estilo para a caixa de tempo de volta do piloto */
+        .piloto-lap-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 6px;
+            padding-left: 10px;
+            border-left: 2px solid var(--border);
+        }
+        .piloto-lap-input input {
+            padding: 6px 10px;
+            font-size: 12px;
+            width: 120px;
+        }
+        .piloto-lap-input label {
+            margin-bottom: 0;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
     </style>
 </head>
 <body>
@@ -136,13 +157,14 @@
     </div>
 
     <div class="main-content">
+        <!-- Esquerda -->
         <div>
             <div class="card">
                 <h3>Classificação Geral</h3>
                 <div class="info-box">
                     <strong>Super Bônus F7:</strong> Vence quem tem <strong>MAIS</strong> Pontos Totais.<br>
                     <strong>Pontos Totais:</strong> É a soma dos Pontos da Corrida + nº de Vitórias + nº de Pódios + nº de Voltas Rápidas.<br>
-                    <strong>Pontos da Corrida:</strong> 1º = 20 pts, 2º = 19 pts, etc. (+1 pt base por melhor volta).
+                    <strong>Pontos da Corrida:</strong> 1º = 20 pts, 2º = 19 pts, etc. (+1 pt base por melhor volta absoluta).
                 </div>
                 <div style="overflow-x: auto;">
                     <table>
@@ -162,6 +184,7 @@
                 </div>
             </div>
 
+            <!-- Histórico Individual do Piloto -->
             <div class="card">
                 <h3>🔍 Histórico Detalhado do Piloto</h3>
                 <div class="form-group">
@@ -170,7 +193,14 @@
                         <option value="">Selecione um piloto...</option>
                     </select>
                 </div>
-                <div style="overflow-x: auto;">
+                
+                <!-- Novo Gráfico de Evolução de Tempo do Piloto -->
+                <div class="chart-container" style="height: 250px; display: none;" id="piloto-tempo-chart-container">
+                    <h4 style="font-size: 14px; margin-bottom: 10px; color: var(--text-muted); text-align: center;">Evolução de Tempo de Volta</h4>
+                    <canvas id="pilotoTempoChart"></canvas>
+                </div>
+
+                <div style="overflow-x: auto; margin-top: 15px;">
                     <table>
                         <thead>
                             <tr>
@@ -178,12 +208,13 @@
                                 <th>Data</th>
                                 <th>Posição</th>
                                 <th>Pts da Corrida</th>
-                                <th>Melhor Volta?</th>
+                                <th>Melhor Tempo (P/ Piloto)</th>
+                                <th>Absoluta (+1)?</th>
                             </tr>
                         </thead>
                         <tbody id="historico-piloto-body">
                             <tr>
-                                <td colspan="5" style="text-align: center; color: var(--text-muted);">Selecione um piloto acima.</td>
+                                <td colspan="6" style="text-align: center; color: var(--text-muted);">Selecione um piloto acima.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -206,7 +237,7 @@
                                 <th>Bateria</th>
                                 <th>Data</th>
                                 <th>Vencedor (1º)</th>
-                                <th>Melhor Volta</th>
+                                <th>Melhor Volta Absoluta</th>
                                 <th>Ação</th>
                             </tr>
                         </thead>
@@ -216,6 +247,7 @@
             </div>
         </div>
 
+        <!-- Direita -->
         <div>
             <div class="card">
                 <h3>Adicionar Novo Piloto</h3>
@@ -231,14 +263,15 @@
                     <label>Data da Corrida</label>
                     <input type="date" id="data-corrida">
                 </div>
-                <label>Ordem de Chegada (1º ao 20º)</label>
+                <label>Ordem de Chegada (1º ao 20º) e Tempos (Opcional)</label>
                 <div id="posicoes-container"></div>
                 <div style="display: flex; gap: 10px; margin-top: 10px; margin-bottom: 20px;">
                     <button class="btn-outline" style="margin-top: 0;" onclick="addPosicaoForm()">+ Adicionar</button>
                     <button class="btn-danger" style="margin-top: 0;" onclick="removePosicaoForm()">- Remover</button>
                 </div>
                 <div class="form-group" style="border-top: 1px solid var(--border); padding-top: 16px;">
-                    <label>Piloto da Melhor Volta (+1 Ponto Extra)</label>
+                    <label>Piloto da Melhor Volta Absoluta (+1 Ponto Extra)</label>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Preencha os tempos dos pilotos acima e isso será automático (você pode alterar).</div>
                     <select id="best-lap-piloto" style="margin-bottom: 10px;">
                         <option value="">Ninguém/Não registrado</option>
                     </select>
@@ -253,7 +286,7 @@
 
 <script>
     // ==========================================
-    // 1. CONFIGURAÇÃO DO FIREBASE
+    // 1. CONFIGURAÇÃO DO FIREBASE (Cole Suas Chaves Aqui)
     // ==========================================
     const firebaseConfig = {
       apiKey: "AIzaSyBhiKl0SkfdQKIib6n9OVWtPeUodJJc3Js",
@@ -270,36 +303,57 @@
     // ==========================================
     // 2. LÓGICA DO SISTEMA
     // ==========================================
-    let pilotos = [];
+    let pilotos = ["Fabrício", "Marcelino", "Souza", "Wanderley", "Douglas", "Lucas", "Perine"];
     let corridas = []; 
     let chartInstance = null;
+    let pilotoTempoChartInstance = null; // Gráfico de tempos individuais
     let qtdPosicoesForm = 0;
 
-    db.collection("f7kart").doc("temporada1").onSnapshot((doc) => {
-        if (doc.exists) {
-            pilotos = doc.data().pilotos || [];
-            corridas = doc.data().corridas || [];
-        } else {
-            pilotos = ["Fabrício", "Marcelino", "Souza", "Wanderley", "Douglas", "Lucas", "Perine"];
-            corridas = [];
-            salvarNoFirebase();
-        }
-        
-        document.getElementById('dash-pilotos').innerText = pilotos.length;
-        
-        if (qtdPosicoesForm === 0) {
-            for(let i=0; i<5; i++) addPosicaoForm();
-        }
+    // Escuta o banco de dados em tempo real com tratamento de erro
+    try {
+        db.collection("f7kart").doc("temporada1").onSnapshot((doc) => {
+            if (doc.exists) {
+                pilotos = doc.data().pilotos || [];
+                corridas = doc.data().corridas || [];
+            }
+            
+            document.getElementById('dash-pilotos').innerText = pilotos.length;
+            
+            if (qtdPosicoesForm === 0) {
+                for(let i=0; i<5; i++) addPosicaoForm();
+            }
 
-        atualizarSelectsFormulario();
-        atualizarDashboard();
-        atualizarHistoricoPiloto();
-    });
+            atualizarSelectsFormulario();
+            atualizarDashboard();
+            atualizarHistoricoPiloto();
+        }, (error) => {
+            console.error("Erro ao carregar dados do Firebase:", error);
+            if (error.code === 'permission-denied') {
+                alert("⚠️ Erro de Permissão do Banco de Dados: O período de teste do Firebase expirou. Acesse o console do Firebase -> Firestore -> Regras e atualize as permissões para 'allow read, write: if true;'. O painel funcionará offline temporariamente.");
+            }
+            // Fallback: Initialize form and dashboard even if DB fails
+            if (qtdPosicoesForm === 0) {
+                for(let i=0; i<5; i++) addPosicaoForm();
+            }
+            atualizarSelectsFormulario();
+            atualizarDashboard();
+            atualizarHistoricoPiloto();
+        });
+    } catch (e) {
+        console.error("Falha ao inicializar o listener do Firestore", e);
+    }
 
     function salvarNoFirebase() {
         db.collection("f7kart").doc("temporada1").set({
             pilotos: pilotos,
             corridas: corridas
+        }).then(() => {
+            console.log("Dados salvos com sucesso!");
+        }).catch((error) => {
+            console.error("Erro ao salvar dados:", error);
+            if (error.code === 'permission-denied') {
+                 alert("⚠️ Erro: Não foi possível salvar os dados. Permissão negada no banco de dados.");
+            }
         });
     }
 
@@ -316,6 +370,29 @@
         salvarNoFirebase(); 
     }
 
+    // --- FUNÇÕES DE TEMPO HELPER ---
+    // Converte string de tempo (ex: "1:02.450" ou "62.450") para número (segundos)
+    function parseTimeStr(timeStr) {
+        if(!timeStr) return NaN;
+        let str = timeStr.trim().replace(',', '.');
+        let partes = str.split(':');
+        if (partes.length === 2) {
+            return (parseFloat(partes[0]) * 60) + parseFloat(partes[1]);
+        }
+        return parseFloat(str);
+    }
+
+    // Formata número (segundos) para string (ex: "1:02.450")
+    function formatTimeNum(timeNum) {
+        if(!timeNum || isNaN(timeNum) || timeNum === Infinity) return "---";
+        if(timeNum < 60) return timeNum.toFixed(3);
+        let mins = Math.floor(timeNum / 60);
+        let secs = (timeNum % 60).toFixed(3);
+        if(secs < 10) secs = "0" + secs;
+        return `${mins}:${secs}`;
+    }
+    // --------------------------------
+
     function addPosicaoForm() {
         if (qtdPosicoesForm >= 20) return alert("Máximo de 20 posições.");
         qtdPosicoesForm++;
@@ -324,11 +401,20 @@
         div.className = 'pos-row';
         div.id = `pos-row-${qtdPosicoesForm}`;
         
+        // Estrutura expandida para suportar tempo individual
         div.innerHTML = `
-            <span>${qtdPosicoesForm}º</span>
-            <select class="piloto-select" id="pos-${qtdPosicoesForm}">
-                <option value="">Selecione o piloto...</option>
-            </select>
+            <div style="display: flex; flex-direction: column; width: 100%;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span>${qtdPosicoesForm}º</span>
+                    <select class="piloto-select" id="pos-${qtdPosicoesForm}">
+                        <option value="">Selecione o piloto...</option>
+                    </select>
+                </div>
+                <div class="piloto-lap-input">
+                    <label for="lap-${qtdPosicoesForm}">Tempo (Opcional):</label>
+                    <input type="text" id="lap-${qtdPosicoesForm}" placeholder="ex: 58.123" onblur="autoPreencherMelhorVolta()">
+                </div>
+            </div>
         `;
         container.appendChild(div);
         atualizarSelectsFormulario();
@@ -339,6 +425,7 @@
         const container = document.getElementById('posicoes-container');
         container.removeChild(document.getElementById(`pos-row-${qtdPosicoesForm}`));
         qtdPosicoesForm--;
+        autoPreencherMelhorVolta();
     }
 
     function atualizarSelectsFormulario() {
@@ -348,6 +435,9 @@
             select.innerHTML = `<option value="">Selecione o piloto...</option>` + 
                                pilotos.map(p => `<option value="${p}">${p}</option>`).join('');
             select.value = valorAtual;
+            
+            // Adiciona listener para recalcular melhor volta ao mudar piloto
+            select.addEventListener('change', autoPreencherMelhorVolta);
         });
 
         const bestLap = document.getElementById('best-lap-piloto');
@@ -363,18 +453,56 @@
         histSelect.value = currentHist;
     }
 
+    // Função que tenta descobrir automaticamente quem fez a melhor volta baseada nos inputs individuais
+    function autoPreencherMelhorVolta() {
+        let bestTime = Infinity;
+        let bestPiloto = "";
+        let bestTimeStr = "";
+
+        for (let i = 1; i <= qtdPosicoesForm; i++) {
+            let piloto = document.getElementById(`pos-${i}`).value;
+            let timeStr = document.getElementById(`lap-${i}`).value.trim();
+            
+            if (piloto && timeStr) {
+                let t = parseTimeStr(timeStr);
+                if (!isNaN(t) && t < bestTime) {
+                    bestTime = t;
+                    bestPiloto = piloto;
+                    bestTimeStr = timeStr;
+                }
+            }
+        }
+
+        // Se achou um melhor tempo, preenche os campos lá embaixo, mas não sobreescreve se o usuário digitou manualmente algo lá
+        if (bestPiloto && bestTimeStr) {
+             document.getElementById('best-lap-piloto').value = bestPiloto;
+             document.getElementById('best-lap-tempo').value = bestTimeStr;
+        }
+    }
+
     function salvarCorrida() {
         const dataCorrida = document.getElementById('data-corrida').value;
         const resultados = {};
         const selecionados = new Set();
         let vencedorDaCorrida = "---";
+        let melhorTempoAbsolutoManual = document.getElementById('best-lap-tempo').value.trim();
         
         for (let i = 1; i <= qtdPosicoesForm; i++) {
             const piloto = document.getElementById(`pos-${i}`).value;
             if (piloto) {
                 if (selecionados.has(piloto)) return alert(`O piloto ${piloto} foi selecionado mais de uma vez!`);
                 selecionados.add(piloto);
-                resultados[piloto] = i; 
+                
+                // Pega o tempo individual, se houver
+                let lapTimeStr = document.getElementById(`lap-${i}`).value.trim();
+                let lapTimeNum = parseTimeStr(lapTimeStr);
+
+                resultados[piloto] = {
+                    posicao: i,
+                    tempoStr: lapTimeStr || null,
+                    tempoNum: isNaN(lapTimeNum) ? null : lapTimeNum
+                }; 
+                
                 if (i === 1) vencedorDaCorrida = piloto;
             }
         }
@@ -382,27 +510,23 @@
         if (selecionados.size === 0) return alert("Selecione pelo menos o vencedor.");
 
         const mvPiloto = document.getElementById('best-lap-piloto').value;
-        const mvTempoStr = document.getElementById('best-lap-tempo').value.trim();
-        let mvTempoNum = Infinity;
+        let mvTempoNum = parseTimeStr(melhorTempoAbsolutoManual);
 
-        if (mvPiloto && mvTempoStr) {
-            let partes = mvTempoStr.split(':');
-            let formatedStr = mvTempoStr.replace(',', '.');
-            if (partes.length === 2) {
-                mvTempoNum = (parseFloat(partes[0]) * 60) + parseFloat(partes[1].replace(',', '.'));
-            } else {
-                mvTempoNum = parseFloat(formatedStr);
-            }
-            if(isNaN(mvTempoNum)) return alert("Formato de tempo inválido.");
+        if (mvPiloto && melhorTempoAbsolutoManual && isNaN(mvTempoNum)) {
+             return alert("Formato de tempo da melhor volta absoluta inválido.");
         }
 
-        const melhorVolta = (mvPiloto && !isNaN(mvTempoNum)) ? { piloto: mvPiloto, tempoStr: mvTempoStr, tempoNum: mvTempoNum } : null;
+        const melhorVolta = (mvPiloto && !isNaN(mvTempoNum)) ? { piloto: mvPiloto, tempoStr: melhorTempoAbsolutoManual, tempoNum: mvTempoNum } : null;
         const partesData = dataCorrida.split('-');
         const dataFormatada = partesData.length === 3 ? `${partesData[2]}/${partesData[1]}` : `Corrida ${corridas.length + 1}`;
 
         corridas.push({ data: dataFormatada, resultados, melhorVolta, vencedor: vencedorDaCorrida });
         
-        document.querySelectorAll('.piloto-select').forEach(sel => sel.value = "");
+        // Limpar os campos
+        for (let i = 1; i <= qtdPosicoesForm; i++) {
+            if(document.getElementById(`pos-${i}`)) document.getElementById(`pos-${i}`).value = "";
+            if(document.getElementById(`lap-${i}`)) document.getElementById(`lap-${i}`).value = "";
+        }
         document.getElementById('best-lap-piloto').value = "";
         document.getElementById('best-lap-tempo').value = "";
         
@@ -410,9 +534,22 @@
     }
 
     function deletarCorrida(index) {
-        if(confirm("⚠️ ATENÇÃO: Tem certeza que deseja APAGAR os dados desta corrida? Todos os pontos e gráficos do campeonato serão recalculados imediatamente.")) {
-            corridas.splice(index, 1);
-            salvarNoFirebase();
+        // Solicita a senha para confirmar a exclusão
+        const senha = prompt("⚠️ Área Restrita: Digite a senha de administrador para apagar esta corrida:");
+        
+        if (senha === null) {
+            // O usuário clicou em cancelar
+            return;
+        }
+        
+        if (senha === "@Amigoskart2026") {
+            if(confirm("Senha correta. Tem certeza que deseja APAGAR os dados desta corrida? Todos os pontos e gráficos do campeonato serão recalculados imediatamente.")) {
+                corridas.splice(index, 1);
+                salvarNoFirebase();
+                alert("Corrida excluída com sucesso.");
+            }
+        } else {
+            alert("❌ Senha incorreta. Ação cancelada.");
         }
     }
 
@@ -422,7 +559,10 @@
 
         corridas.forEach((corrida) => {
             pilotos.forEach(p => {
-                const pos = corrida.resultados[p]; 
+                const res = corrida.resultados[p];
+                // Compatibilidade retroativa (antes os resultados armazenavam só o int da posição, agora armazenam objeto {posicao, tempoStr...})
+                const pos = (typeof res === 'object' && res !== null) ? res.posicao : res;
+                
                 let pts = (pos && pos <= 20) ? (21 - pos) : 0;
                 
                 if (corrida.melhorVolta && corrida.melhorVolta.piloto === p) {
@@ -453,25 +593,40 @@
     function atualizarHistoricoPiloto() {
         const pilotoSelecionado = document.getElementById('select-historico-piloto').value;
         const tbody = document.getElementById('historico-piloto-body');
+        const chartContainer = document.getElementById('piloto-tempo-chart-container');
         tbody.innerHTML = '';
 
         if (!pilotoSelecionado) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Selecione um piloto para ver o histórico.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Selecione um piloto para ver o histórico e a evolução.</td></tr>`;
+            chartContainer.style.display = 'none';
             return;
         }
 
         if (corridas.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhuma corrida registrada.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhuma corrida registrada.</td></tr>`;
+            chartContainer.style.display = 'none';
             return;
         }
 
-        corridas.forEach((c, index) => {
-            const pos = c.resultados[pilotoSelecionado];
-            let teveMelhorVolta = (c.melhorVolta && c.melhorVolta.piloto === pilotoSelecionado);
+        let temposIndividuais = [];
+        let labelsTempos = [];
 
-            if (pos || teveMelhorVolta) {
+        corridas.forEach((c, index) => {
+            const res = c.resultados[pilotoSelecionado];
+            const pos = (typeof res === 'object' && res !== null) ? res.posicao : res;
+            let teveMelhorVoltaAbsoluta = (c.melhorVolta && c.melhorVolta.piloto === pilotoSelecionado);
+            
+            // Pega o tempo se existir no objeto
+            let tempoIndividualStr = "---";
+            let tempoIndividualNum = null;
+            if(typeof res === 'object' && res !== null && res.tempoStr) {
+                tempoIndividualStr = res.tempoStr;
+                tempoIndividualNum = res.tempoNum;
+            }
+
+            if (pos || teveMelhorVoltaAbsoluta) {
                 let pts = (pos && pos <= 20) ? (21 - pos) : 0;
-                if (teveMelhorVolta) pts += 1;
+                if (teveMelhorVoltaAbsoluta) pts += 1;
 
                 tbody.innerHTML += `
                     <tr>
@@ -479,9 +634,17 @@
                         <td>${c.data}</td>
                         <td>${pos ? pos + 'º Lugar' : 'Sem posição'}</td>
                         <td style="font-weight: bold; color: var(--accent);">${pts} pts</td>
-                        <td style="color: ${teveMelhorVolta ? 'var(--gold)' : 'var(--text-muted)'};">${teveMelhorVolta ? '⭐ Sim (+1 pt)' : 'Não'}</td>
+                        <td style="font-weight: 500;">⏱️ ${tempoIndividualStr}</td>
+                        <td style="color: ${teveMelhorVoltaAbsoluta ? 'var(--gold)' : 'var(--text-muted)'};">${teveMelhorVoltaAbsoluta ? '⭐ Sim' : 'Não'}</td>
                     </tr>
                 `;
+
+                // Coleta dados para o gráfico de evolução de tempo
+                if(tempoIndividualNum) {
+                    temposIndividuais.push(tempoIndividualNum);
+                    labelsTempos.push(`Cor. ${index+1} (${c.data})`);
+                }
+
             } else {
                 tbody.innerHTML += `
                     <tr>
@@ -489,9 +652,65 @@
                         <td>${c.data}</td>
                         <td style="color: var(--danger);">Faltou</td>
                         <td style="color: var(--text-muted);">0 pts</td>
+                        <td style="color: var(--text-muted);">---</td>
                         <td style="color: var(--text-muted);">Não</td>
                     </tr>
                 `;
+            }
+        });
+
+        // Atualiza Gráfico de Tempo do Piloto
+        if (temposIndividuais.length > 0) {
+            chartContainer.style.display = 'block';
+            atualizarGraficoTempoPiloto(labelsTempos, temposIndividuais, pilotoSelecionado);
+        } else {
+             chartContainer.style.display = 'none';
+        }
+    }
+
+    function atualizarGraficoTempoPiloto(labels, dados, nome) {
+        const ctx = document.getElementById('pilotoTempoChart').getContext('2d');
+        
+        if(pilotoTempoChartInstance) pilotoTempoChartInstance.destroy();
+
+        pilotoTempoChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: `Melhor Tempo (segundos) - ${nome}`,
+                    data: dados,
+                    borderColor: '#34c759', // Verde para indicar tempo/velocidade
+                    backgroundColor: 'rgba(52, 199, 89, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#ffffff',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Segundos (Menos é Melhor)', font: {size: 11} },
+                        grid: { color: '#f2f2f7' },
+                        ticks: {
+                            callback: function(value) { return formatTimeNum(value); }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Tempo: ${formatTimeNum(context.raw)}`;
+                            }
+                        }
+                    }
+                }
             }
         });
     }
@@ -565,7 +784,8 @@
             const colors = ['#0071e3', '#34c759', '#ff9500', '#ff3b30', '#5856d6', '#ffcc00', '#5ac8fa', '#000000', '#8e8e93'];
             let acumulado = 0;
             const data = corridas.map(c => {
-                const pos = c.resultados[piloto];
+                const res = c.resultados[piloto];
+                const pos = (typeof res === 'object' && res !== null) ? res.posicao : res;
                 let pts = (pos && pos <= 20) ? (21 - pos) : 0;
                 
                 // Pontos na corrida + Super Bônus por etapa
