@@ -180,7 +180,7 @@
                 <div class="info-box">
                     <strong>Super Bônus F7:</strong> Vence quem tem <strong>MAIS</strong> Pontos Totais.<br>
                     <strong>Pontos Totais:</strong> Soma dos Pontos da Corrida + nº de Vitórias + nº de Pódios + nº de Voltas Rápidas.<br>
-                    <strong>Ausências/Faltas:</strong> 3 faltas = Alerta de Risco. <strong>4 faltas = Desclassificação (Excluído).</strong>
+                    <strong>Ausências/Faltas:</strong> 4 faltas = Alerta de Risco. <strong>5 faltas = Desclassificação (Excluído).</strong>
                 </div>
                 <div style="overflow-x: auto;">
                     <table>
@@ -622,8 +622,8 @@
         Object.values(stats).forEach(s => {
             s.pontosSuperTotais = s.pontosBase + s.vitorias + s.podios + s.voltasRapidas;
             // Define o status do piloto baseado nas faltas
-            if (s.faltas === 3) s.status = 'risco';
-            if (s.faltas >= 4) s.status = 'excluido';
+            if (s.faltas === 4) s.status = 'risco';
+            if (s.faltas >= 5) s.status = 'excluido';
         });
 
         return Object.values(stats).sort((a, b) => {
@@ -737,9 +737,9 @@
             let pointsStyle = "font-weight: bold; color: var(--accent); font-size: 16px;";
 
             if (p.status === 'risco') {
-                nomeDisplay += ' <span class="badge-risco" title="Faltou 3 vezes. Será desclassificado na próxima falta!">⚠️ Em Risco</span>';
+                nomeDisplay += ' <span class="badge-risco" title="Faltou 4 vezes. Será desclassificado na próxima falta!">⚠️ Em Risco</span>';
             } else if (p.status === 'excluido') {
-                nomeDisplay += ' <span class="badge-excluido" title="Desclassificado do campeonato (4 ou mais faltas).">❌ Excluído</span>';
+                nomeDisplay += ' <span class="badge-excluido" title="Desclassificado do campeonato (5 ou mais faltas).">❌ Excluído</span>';
                 rowStyle = "opacity: 0.6; background-color: #fafafa;";
                 pointsStyle = "font-weight: bold; color: var(--text-muted); font-size: 16px; text-decoration: line-through;";
                 medalha = ""; // Remove cor de pódio se estiver excluído
