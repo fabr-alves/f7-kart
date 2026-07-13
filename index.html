@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Championship Dashboard - F1 Style</title>
     
-    <!-- NOVA BIBLIOTECA PARA GERAR O PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -143,7 +141,6 @@
             <h1>🏁 F7 Kart Championship</h1>
             <div style="font-size: 14px; color: var(--text-muted);"><span class="status-dot"></span>Online (Tempo Real)</div>
         </div>
-        <!-- NOVO BOTÃO DE PDF -->
         <button id="btn-export-pdf" onclick="exportarPDF()" class="btn-outline" style="width: auto; margin-top: 0; padding: 10px 16px; font-weight: 800; border-color: #e10600; color: #e10600; background-color: #fff0f0;">
             PDF
         </button>
@@ -342,7 +339,6 @@
 
             // 2. Transfere todos os pontos e históricos antigos para o novo nome e corrige o tempo do Wanderley
             corridas.forEach(corrida => {
-                // Ajuste de nome Perine -> Perini
                 if (corrida.resultados && corrida.resultados["Perine"]) {
                     corrida.resultados["Perini"] = corrida.resultados["Perine"];
                     delete corrida.resultados["Perine"];
@@ -357,7 +353,6 @@
                     precisaSalvarCorrecao = true;
                 }
 
-                // Ajuste do tempo do Wanderley (de "55075" para "55.075")
                 if (corrida.resultados && corrida.resultados["Wanderley"]) {
                     if (corrida.resultados["Wanderley"].tempoStr === "55075") {
                         corrida.resultados["Wanderley"].tempoStr = "55.075";
@@ -372,7 +367,6 @@
                 }
             });
 
-            // 3. Salva a correção permanentemente na nuvem
             if (precisaSalvarCorrecao) {
                 salvarNoFirebase();
             }
@@ -595,7 +589,6 @@
 
     function calcularEstatisticas() {
         const stats = {};
-        // Adicionado: campo "faltas" e "status"
         pilotos.forEach(p => stats[p] = { nome: p, pontosBase: 0, vitorias: 0, podios: 0, voltasRapidas: 0, pontosSuperTotais: 0, faltas: 0, status: 'ativo' });
 
         corridas.forEach((corrida) => {
@@ -603,7 +596,6 @@
                 const res = corrida.resultados[p];
                 const pos = (typeof res === 'object' && res !== null) ? res.posicao : res;
                 
-                // Verifica faltas
                 if (!pos) {
                     stats[p].faltas += 1;
                 } else {
@@ -621,16 +613,13 @@
 
         Object.values(stats).forEach(s => {
             s.pontosSuperTotais = s.pontosBase + s.vitorias + s.podios + s.voltasRapidas;
-            // Define o status do piloto baseado nas faltas
             if (s.faltas === 4) s.status = 'risco';
             if (s.faltas >= 5) s.status = 'excluido';
         });
 
         return Object.values(stats).sort((a, b) => {
-            // Joga os desclassificados para o final da tabela
             if (a.status === 'excluido' && b.status !== 'excluido') return 1;
             if (b.status === 'excluido' && a.status !== 'excluido') return -1;
-
             if (a.pontosSuperTotais !== b.pontosSuperTotais) return b.pontosSuperTotais - a.pontosSuperTotais; 
             if (a.vitorias !== b.vitorias) return b.vitorias - a.vitorias; 
             if (a.podios !== b.podios) return b.podios - a.podios; 
@@ -731,7 +720,6 @@
         rank.forEach((p, index) => {
             let medalha = index === 0 && p.status !== 'excluido' ? 'pos-1' : index === 1 && p.status !== 'excluido' ? 'pos-2' : index === 2 && p.status !== 'excluido' ? 'pos-3' : (index === 3 || index === 4) && p.status !== 'excluido' ? 'pos-45' : '';
             
-            // Estilos visuais para Risco e Exclusão
             let nomeDisplay = p.nome;
             let rowStyle = "";
             let pointsStyle = "font-weight: bold; color: var(--accent); font-size: 16px;";
@@ -742,7 +730,7 @@
                 nomeDisplay += ' <span class="badge-excluido" title="Desclassificado do campeonato (5 ou mais faltas).">❌ Excluído</span>';
                 rowStyle = "opacity: 0.6; background-color: #fafafa;";
                 pointsStyle = "font-weight: bold; color: var(--text-muted); font-size: 16px; text-decoration: line-through;";
-                medalha = ""; // Remove cor de pódio se estiver excluído
+                medalha = ""; 
             }
 
             tbody.innerHTML += `
@@ -780,7 +768,6 @@
                 `;
             });
 
-            // O líder não pode ser um piloto excluído
             let liderAtivo = rank.find(p => p.status !== 'excluido');
             document.getElementById('dash-leader').innerText = liderAtivo ? liderAtivo.nome : "---";
             document.getElementById('dash-leader-pts').innerText = liderAtivo ? `${liderAtivo.pontosSuperTotais} pts totais` : "0 pts";
@@ -836,22 +823,19 @@
     function exportarPDF() {
         const btn = document.getElementById('btn-export-pdf');
         const btnOriginalText = btn.innerHTML;
-        btn.innerHTML = '⏳ Gerando Documento...';
+        btn.innerHTML = '⏳ Gerando...';
         btn.disabled = true;
 
-        // Pega o piloto selecionado para detalhar
-        const pilotoSelecionado = document.getElementById('select-historico-piloto').value;
         const rank = calcularEstatisticas(); 
-        let lider = rank.find(p => p.status !== 'excluido');
-        let pilotoRelatorio = pilotoSelecionado || (lider ? lider.nome : "");
-
-        // Constrói as linhas da Tabela de Classificação do PDF
+        const dataAtual = new Date().toLocaleDateString('pt-BR');
+        
+        // 1. Tabela de Classificação Geral (Página 1)
         let leaderboardHTML = rank.map((p, index) => {
             let style = p.status === 'excluido' ? 'opacity: 0.5; text-decoration: line-through;' : '';
             return `
-                <tr style="border-bottom: 1px solid #ddd; ${style}">
+                <tr style="border-bottom: 1px solid #ddd; ${style};">
                     <td style="padding: 8px 12px; font-weight: bold;">${index + 1}º</td>
-                    <td style="padding: 8px 12px; font-weight: bold; font-size: 15px;">${p.nome} ${p.status === 'risco' ? '(Risco)' : p.status === 'excluido' ? '(Excluído)' : ''}</td>
+                    <td style="padding: 8px 12px; font-weight: bold; font-size: 14px;">${p.nome} ${p.status === 'risco' ? '(Risco)' : p.status === 'excluido' ? '(Excluído)' : ''}</td>
                     <td style="padding: 8px 12px; font-weight: bold; color: #e10600; font-size: 16px;">${p.pontosSuperTotais}</td>
                     <td style="padding: 8px 12px;">${p.vitorias}</td>
                     <td style="padding: 8px 12px;">${p.podios}</td>
@@ -860,116 +844,187 @@
             `;
         }).join('');
 
-        // Constrói as linhas do Histórico Individual
-        let historyHTML = '';
-        if (pilotoRelatorio) {
-            historyHTML = corridas.map((c, index) => {
-                const res = c.resultados[pilotoRelatorio];
+        // 2. Foto do Gráfico Geral (Página 2) 
+        const canvasGeral = document.getElementById('evolutionChart');
+        let chartGeralImgHTML = '';
+        if (canvasGeral) {
+            chartGeralImgHTML = `<img src="${canvasGeral.toDataURL('image/png', 1.0)}" style="width: 100%; height: auto; max-height: 160mm; object-fit: contain; background: white;">`;
+        }
+
+        // 3. PÁGINAS DOS PILOTOS
+        let relatorioPilotosHTML = '';
+
+        rank.forEach((pilotoData, index) => {
+            let pilotoNome = pilotoData.nome;
+            
+            // Tabela do Piloto
+            let historyHTML = corridas.map((c, idx) => {
+                const res = c.resultados[pilotoNome];
                 const pos = (typeof res === 'object' && res !== null) ? res.posicao : res;
-                let teveMelhorVolta = (c.melhorVolta && c.melhorVolta.piloto === pilotoRelatorio);
+                let teveMelhorVolta = (c.melhorVolta && c.melhorVolta.piloto === pilotoNome);
                 let tempoStr = (typeof res === 'object' && res !== null && res.tempoStr) ? res.tempoStr : '---';
                 
                 if (pos || teveMelhorVolta) {
                     let pts = (pos && pos <= 20) ? (21 - pos) : 0;
                     if (teveMelhorVolta) pts += 1;
                     return `
-                        <tr style="border-bottom: 1px solid #ddd;">
-                            <td style="padding: 8px 12px; font-weight: bold;">#${index + 1}</td>
-                            <td style="padding: 8px 12px;">${c.data}</td>
-                            <td style="padding: 8px 12px; font-weight: bold;">${pos ? pos + 'º' : '-'}</td>
-                            <td style="padding: 8px 12px; font-weight: bold; color: #0071e3;">${pts}</td>
-                            <td style="padding: 8px 12px;">${tempoStr} ${teveMelhorVolta ? '<span style="color: #b26800; font-weight: bold;">(+1 Ponto)</span>' : ''}</td>
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 8px 10px; font-weight: bold; width: 10%;">#${idx + 1}</td>
+                            <td style="padding: 8px 10px; width: 25%;">${c.data}</td>
+                            <td style="padding: 8px 10px; font-weight: bold; width: 15%;">${pos ? pos + 'º' : '-'}</td>
+                            <td style="padding: 8px 10px; font-weight: bold; color: #0071e3; width: 20%;">${pts}</td>
+                            <td style="padding: 8px 10px; width: 30%;">⏱️ ${tempoStr} ${teveMelhorVolta ? '<span style="color: #b26800; font-size: 10px;">⭐</span>' : ''}</td>
                         </tr>
                     `;
                 } else {
                     return `
-                        <tr style="border-bottom: 1px solid #ddd; background-color: #fff0f0;">
-                            <td style="padding: 8px 12px; font-weight: bold;">#${index + 1}</td>
-                            <td style="padding: 8px 12px;">${c.data}</td>
-                            <td style="padding: 8px 12px; color: #e10600; font-weight: bold;">FALTOU</td>
-                            <td style="padding: 8px 12px;">0</td>
-                            <td style="padding: 8px 12px;">---</td>
+                        <tr style="border-bottom: 1px solid #eee; background-color: #fff0f0;">
+                            <td style="padding: 8px 10px; font-weight: bold;">#${idx + 1}</td>
+                            <td style="padding: 8px 10px;">${c.data}</td>
+                            <td style="padding: 8px 10px; color: #e10600; font-weight: bold;">FALTOU</td>
+                            <td style="padding: 8px 10px;">0</td>
+                            <td style="padding: 8px 10px;">---</td>
                         </tr>
                     `;
                 }
             }).join('');
-        } else {
-             historyHTML = `<tr><td colspan="5" style="padding: 10px; text-align: center;">Nenhuma corrida registrada.</td></tr>`;
-        }
 
-        const dataAtual = new Date().toLocaleDateString('pt-BR');
+            if (corridas.length === 0) historyHTML = `<tr><td colspan="5" style="padding: 10px; text-align: center;">Nenhuma corrida registrada.</td></tr>`;
 
-        // Cria o molde oculto do Relatório Oficial (Layout Formula 1)
+            // Gráfico do Piloto
+            let temposIndividuais = [];
+            let labelsTempos = [];
+            corridas.forEach((c, idx) => {
+                const res = c.resultados[pilotoNome];
+                if(typeof res === 'object' && res !== null && res.tempoNum) {
+                    temposIndividuais.push(res.tempoNum);
+                    labelsTempos.push(`Bat. ${idx+1}`); 
+                }
+            });
+
+            let chartIndividualImgHTML = '';
+            if (temposIndividuais.length > 0) {
+                const tempCanvas = document.createElement('canvas');
+                // Proporção ajustada para caber bem na coluna da esquerda
+                tempCanvas.width = 500; 
+                tempCanvas.height = 300; 
+                const ctx = tempCanvas.getContext('2d');
+                
+                new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: labelsTempos, datasets: [{ data: temposIndividuais, borderColor: '#34c759', backgroundColor: 'rgba(52, 199, 89, 0.1)', borderWidth: 3, pointRadius: 5, pointBackgroundColor: '#ffffff', tension: 0.3, fill: true }] },
+                    options: { animation: false, responsive: false, scales: { y: { ticks: { callback: function(value) { return formatTimeNum(value); } } } }, plugins: { legend: { display: false } } }
+                });
+                
+                chartIndividualImgHTML = `<img src="${tempCanvas.toDataURL('image/png', 1.0)}" style="width: 100%; height: auto; border: 1px solid #eee; margin-top: 10px;">`;
+            }
+
+            // O SEGREDRO: Cada piloto é um "bloco" absoluto que toma a página inteira (A4 Paisagem = 297mm x 210mm)
+            // Usamos CSS Grid para forçar o lado a lado sem quebras.
+            relatorioPilotosHTML += `
+                <div class="html2pdf__page-break"></div>
+                <!-- Container fixo para garantir que tudo fique em 1 página -->
+                <div style="width: 277mm; min-height: 190mm; padding: 10px; box-sizing: border-box; background: white; margin: 0 auto;">
+                    
+                    <div style="border-bottom: 2px solid #1d1d1f; padding-bottom: 5px; margin-bottom: 20px;">
+                        <h2 style="font-size: 24px; font-weight: 800; margin: 0; text-transform: uppercase;">
+                            PILOTO: <span style="color: #0071e3;">${pilotoNome}</span>
+                            ${pilotoData.status === 'excluido' ? '<span style="color:#e10600; font-size: 16px;">(DESCLASSIFICADO)</span>' : ''}
+                        </h2>
+                    </div>
+                    
+                    <!-- GRID ESTRITO: 45% Esquerda, 55% Direita -->
+                    <div style="display: grid; grid-template-columns: 45% 55%; gap: 20px; align-items: start;">
+                        
+                        <!-- Lado Esquerdo: Gráfico -->
+                        <div>
+                            <div style="background: #1d1d1f; color: white; padding: 6px 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; font-style: italic;">📉 Curva de Desempenho</div>
+                            ${chartIndividualImgHTML ? chartIndividualImgHTML : '<div style="text-align: center; margin-top: 20px; color: #86868b;">Nenhum tempo registrado.</div>'}
+                        </div>
+                        
+                        <!-- Lado Direito: Tabela -->
+                        <div>
+                            <div style="background: #1d1d1f; color: white; padding: 6px 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; font-style: italic;">📋 Histórico Completo</div>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; background: #fafafa;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid #ddd;">
+                                        <th style="padding: 10px; color: #86868b;">BAT.</th>
+                                        <th style="padding: 10px; color: #86868b;">DATA</th>
+                                        <th style="padding: 10px; color: #86868b;">POS</th>
+                                        <th style="padding: 10px; color: #86868b;">PTS</th>
+                                        <th style="padding: 10px; color: #86868b;">TEMPO</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${historyHTML}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                    </div>
+                </div>
+            `;
+        });
+
+        // Montagem Final do Documento
         const pdfContainer = document.createElement('div');
-        pdfContainer.style.width = '800px';
-        pdfContainer.style.padding = '40px';
-        pdfContainer.style.backgroundColor = '#ffffff';
-        pdfContainer.style.fontFamily = 'Helvetica, Arial, sans-serif';
-        pdfContainer.style.color = '#1d1d1f';
-        
         pdfContainer.innerHTML = `
-            <div style="border-bottom: 5px solid #e10600; padding-bottom: 15px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
-                <div>
-                    <h1 style="font-size: 38px; font-weight: 900; font-style: italic; margin: 0; letter-spacing: -1.5px; text-transform: uppercase;">F7 KART</h1>
-                    <h2 style="font-size: 16px; font-weight: 800; margin: 0; color: #86868b; text-transform: uppercase; letter-spacing: 2px;">Championship Official Document</h2>
+            <div style="font-family: Helvetica, Arial, sans-serif; color: #1d1d1f; background: white;">
+                
+                <!-- PÁGINA 1: CLASSIFICAÇÃO -->
+                <div style="width: 277mm; min-height: 190mm; padding: 10px; box-sizing: border-box; margin: 0 auto;">
+                    <div style="border-bottom: 5px solid #e10600; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div>
+                            <h1 style="font-size: 36px; font-weight: 900; font-style: italic; margin: 0; letter-spacing: -1.5px; text-transform: uppercase;">F7 KART</h1>
+                            <h2 style="font-size: 16px; font-weight: 800; margin: 0; color: #86868b; text-transform: uppercase; letter-spacing: 2px;">DOSSIÊ DO CAMPEONATO</h2>
+                        </div>
+                        <div style="text-align: right; color: #1d1d1f; font-size: 12px; font-weight: bold; text-transform: uppercase;">
+                            Emissão Oficial<br>
+                            <span style="color: #e10600; font-size: 14px;">${dataAtual}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #1d1d1f; color: white; padding: 8px 15px; font-size: 14px; font-weight: bold; text-transform: uppercase; font-style: italic;">🏆 Classificação Geral</div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; margin-top: 10px;">
+                        <thead>
+                            <tr style="border-bottom: 3px solid #1d1d1f; background: #f2f2f7;">
+                                <th style="padding: 10px 12px; color: #86868b;">POS</th>
+                                <th style="padding: 10px 12px; color: #86868b;">PILOTO</th>
+                                <th style="padding: 10px 12px; color: #e10600;">PTS TOTAIS</th>
+                                <th style="padding: 10px 12px; color: #86868b;">VITÓRIAS</th>
+                                <th style="padding: 10px 12px; color: #86868b;">PÓDIOS</th>
+                                <th style="padding: 10px 12px; color: #86868b;">VOLTAS RÁPIDAS</th>
+                            </tr>
+                        </thead>
+                        <tbody>${leaderboardHTML}</tbody>
+                    </table>
                 </div>
-                <div style="text-align: right; color: #1d1d1f; font-size: 11px; font-weight: bold; text-transform: uppercase;">
-                    Emissão Oficial FIA<br>
-                    <span style="color: #e10600; font-size: 14px;">${dataAtual}</span>
-                </div>
-            </div>
-            
-            <h3 style="font-size: 16px; text-transform: uppercase; background: #1d1d1f; color: white; padding: 10px 15px; margin-bottom: 0; font-style: italic;">🏆 Classificação Geral do Campeonato</h3>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px; font-size: 13px; text-align: left;">
-                <thead>
-                    <tr style="background: #f2f2f7; border-bottom: 3px solid #1d1d1f;">
-                        <th style="padding: 12px; text-transform: uppercase;">Pos</th>
-                        <th style="padding: 12px; text-transform: uppercase;">Piloto</th>
-                        <th style="padding: 12px; text-transform: uppercase; color: #e10600;">Pts Totais</th>
-                        <th style="padding: 12px; text-transform: uppercase;">Vitórias</th>
-                        <th style="padding: 12px; text-transform: uppercase;">Pódios</th>
-                        <th style="padding: 12px; text-transform: uppercase;">Voltas Rápidas</th>
-                    </tr>
-                </thead>
-                <tbody>${leaderboardHTML}</tbody>
-            </table>
 
-            <h3 style="font-size: 16px; text-transform: uppercase; background: #1d1d1f; color: white; padding: 10px 15px; margin-bottom: 0; font-style: italic;">🔍 Desempenho Detalhado: <span style="color: #FFD700;">${pilotoRelatorio}</span></h3>
-            <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; margin-bottom: 30px;">
-                <thead>
-                    <tr style="background: #f2f2f7; border-bottom: 3px solid #1d1d1f;">
-                        <th style="padding: 12px; text-transform: uppercase;">Bat.</th>
-                        <th style="padding: 12px; text-transform: uppercase;">Data</th>
-                        <th style="padding: 12px; text-transform: uppercase;">Posição</th>
-                        <th style="padding: 12px; text-transform: uppercase;">Pts Ganhos</th>
-                        <th style="padding: 12px; text-transform: uppercase;">Melhor Tempo / Status</th>
-                    </tr>
-                </thead>
-                <tbody>${historyHTML}</tbody>
-            </table>
-            
-            <div style="text-align: center; margin-top: 50px; font-size: 10px; color: #86868b; border-top: 1px solid #ddd; padding-top: 15px; text-transform: uppercase;">
-                F7 Kart Championship &copy; ${new Date().getFullYear()} - Documento gerado eletronicamente pelo sistema oficial de telemetria.<br>
-                Uso exclusivo dos pilotos registrados.
+                <!-- PÁGINA 2: GRÁFICO GERAL -->
+                <div class="html2pdf__page-break"></div>
+                <div style="width: 277mm; min-height: 190mm; padding: 10px; box-sizing: border-box; margin: 0 auto;">
+                    <div style="background: #1d1d1f; color: white; padding: 8px 15px; font-size: 14px; font-weight: bold; text-transform: uppercase; font-style: italic; margin-bottom: 20px;">📈 Evolução do Campeonato</div>
+                    <div style="text-align: center;">${chartGeralImgHTML}</div>
+                </div>
+                
+                <!-- PÁGINAS 3+: DOSSIÊ DOS PILOTOS -->
+                ${relatorioPilotosHTML}
+                
             </div>
         `;
 
-        // Coloca o molde invisível na tela só para tirar a "foto" do PDF
-        pdfContainer.style.position = 'absolute';
-        pdfContainer.style.left = '-9999px';
-        document.body.appendChild(pdfContainer);
-
+        // Opções forçadas para Modo Paisagem A4
         const opt = {
-            margin:       [10, 0, 10, 0],
-            filename:     `F7_Kart_Oficial_${dataAtual.replace(/\//g, '-')}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, logging: false },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            margin:       10, 
+            filename:     `F7_Kart_Dossie_${dataAtual.replace(/\//g, '-')}.pdf`,
+            image:        { type: 'jpeg', quality: 1.0 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }, 
+            // pagebreak.mode css garante que a classe html2pdf__page-break seja respeitada rigorosamente
+            pagebreak:    { mode: 'css' } 
         };
 
-        // Roda a biblioteca que transforma o molde em PDF
         html2pdf().set(opt).from(pdfContainer).save().then(() => {
-            document.body.removeChild(pdfContainer);
             btn.innerHTML = btnOriginalText;
             btn.disabled = false;
         }).catch(err => {
