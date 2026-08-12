@@ -75,10 +75,50 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px;}
         th { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;}
-        .pos-1 { color: var(--gold); font-weight: bold; }
-        .pos-2 { color: var(--silver); font-weight: bold; }
-        .pos-3 { color: var(--bronze); font-weight: bold; }
-        .pos-45 { color: var(--top5); font-weight: bold; }
+
+        /* ESTILO F1 RANKING */
+        .f1-ranking {
+            background: linear-gradient(135deg, #4a0000 0%, #1a0000 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            padding: 15px;
+            color: white;
+        }
+        .f1-header {
+            text-align: center;
+            font-style: italic;
+            font-weight: 900;
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            color: #ffcccc;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+        .f1-table { width: 100%; border-collapse: collapse; }
+        .f1-table th { 
+            color: #ff9999; 
+            border-bottom: none; 
+            padding: 8px 10px; 
+            font-size: 11px; 
+        }
+        .f1-table td {
+            padding: 8px 10px;
+            border-bottom: 2px solid rgba(255,255,255,0.05);
+            font-weight: 700;
+            font-style: italic;
+        }
+        .f1-pos {
+            background-color: #e10600;
+            color: white;
+            text-align: center;
+            width: 35px;
+            font-size: 16px;
+        }
+        .f1-nome { text-transform: uppercase; letter-spacing: 1px; font-size: 15px; }
+        .f1-pontos { color: #ffffff; font-size: 18px; text-align: right; }
+        .f1-stats { color: #cccccc; font-size: 13px; text-align: center; font-style: normal; }
 
         .form-group { margin-bottom: 16px; }
         label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted);}
@@ -94,42 +134,26 @@
             cursor: pointer; transition: 0.2s; margin-top: 10px;
         }
         button:hover { background-color: var(--accent-hover); }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; }
         
         .btn-outline { background-color: transparent; color: var(--accent); border: 1px solid var(--accent); }
         .btn-outline:hover { background-color: #f0f7ff; }
         .btn-danger { background-color: transparent; color: var(--danger); border: 1px solid var(--danger); }
         .btn-danger:hover { background-color: #fff0f0; }
+        .btn-warning { background-color: var(--warning); color: white; border: none; }
+        .btn-warning:hover { background-color: #e68600; }
 
         .chart-container { position: relative; height: 320px; width: 100%; margin-top: 20px; }
         .info-box { background-color: #e8f4fd; border-left: 4px solid var(--accent); padding: 12px; border-radius: 4px; font-size: 13px; margin-bottom: 16px; color: #0056b3;}
         .pos-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
         .pos-row span { font-weight: bold; min-width: 30px; }
 
-        .piloto-lap-input {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-top: 6px;
-            padding-left: 10px;
-            border-left: 2px solid var(--border);
-        }
-        .piloto-lap-input input {
-            padding: 6px 10px;
-            font-size: 12px;
-            width: 120px;
-        }
-        .piloto-lap-input label {
-            margin-bottom: 0;
-            font-size: 11px;
-            font-weight: 500;
-        }
+        .piloto-lap-input { display: flex; gap: 10px; align-items: center; margin-top: 6px; padding-left: 10px; border-left: 2px solid var(--border); }
+        .piloto-lap-input input { padding: 6px 10px; font-size: 12px; width: 120px; }
+        .piloto-lap-input label { margin-bottom: 0; font-size: 11px; font-weight: 500; }
 
-        .badge-risco {
-            font-size: 11px; color: #b26800; font-weight: bold; background: #ffeec7; padding: 2px 6px; border-radius: 4px; margin-left: 6px;
-        }
-        .badge-excluido {
-            font-size: 11px; color: var(--danger); font-weight: bold; background: #ffe5e5; padding: 2px 6px; border-radius: 4px; margin-left: 6px;
-        }
+        .badge-risco { font-size: 11px; color: #b26800; font-weight: bold; background: #ffeec7; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-style: normal; }
+        .badge-excluido { font-size: 11px; color: var(--danger); font-weight: bold; background: #ffe5e5; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-style: normal; }
 
     </style>
 </head>
@@ -172,28 +196,30 @@
     <div class="main-content">
         <!-- Esquerda -->
         <div>
-            <div class="card">
-                <h3>Classificação Geral</h3>
-                <div class="info-box">
-                    <strong>Super Bônus F7:</strong> Vence quem tem <strong>MAIS</strong> Pontos Totais.<br>
-                    <strong>Pontos Totais:</strong> Soma dos Pontos da Corrida + nº de Vitórias + nº de Pódios + nº de Voltas Rápidas.<br>
-                    <strong>Ausências/Faltas:</strong> 4 faltas consecutivas = Alerta de Risco. <strong>5 faltas consecutivas = Desclassificação (Excluído).</strong>
-                </div>
-                <div style="overflow-x: auto;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Pos</th>
-                                <th>Piloto</th>
-                                <th style="color: var(--accent);">Pontos Totais</th>
-                                <th>Pts da Corrida</th>
-                                <th>Vitórias</th>
-                                <th>Pódios</th>
-                                <th>Voltas Rápidas</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-body"></tbody>
-                    </table>
+            <!-- NOVO RANKING ESTILO F1 -->
+            <div class="card" style="padding: 10px;">
+                <div class="f1-ranking">
+                    <div class="f1-header">Classificação Geral</div>
+                    <div style="font-size: 11px; text-align: center; margin-bottom: 15px; color: #ffcccc; font-style: normal;">
+                        <strong>Super Bônus F7:</strong> Soma dos Pontos da Corrida + Vitórias + Pódios + Voltas Rápidas.<br>
+                        <strong>Ausências (consecutivas após a estreia):</strong> 3 faltas = Alerta de Risco | <strong>4 faltas = Desclassificação.</strong>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="f1-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">POS</th>
+                                    <th>PILOTO</th>
+                                    <th style="text-align: right;">PTS TOTAIS</th>
+                                    <th style="text-align: center;">PTS CORRIDA</th>
+                                    <th style="text-align: center;">VITÓRIAS</th>
+                                    <th style="text-align: center;">PÓDIOS</th>
+                                    <th style="text-align: center;">VOLTAS RÁP.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -220,7 +246,7 @@
                                 <th>Data</th>
                                 <th>Posição</th>
                                 <th>Pts da Corrida</th>
-                                <th>Melhor Tempo (P/ Piloto)</th>
+                                <th>Melhor Tempo</th>
                                 <th>Absoluta (+1)?</th>
                             </tr>
                         </thead>
@@ -270,36 +296,37 @@
             </div>
 
             <div class="card">
-                <h3>Lançar Corrida</h3>
+                <h3>Lançar / Editar Corrida</h3>
                 <div class="form-group">
                     <label>Data da Corrida</label>
                     <input type="date" id="data-corrida">
                 </div>
-                <label>Ordem de Chegada (1º ao 20º) e Tempos (Opcional)</label>
+                <label>Ordem de Chegada e Tempos (Opcional)</label>
                 <div id="posicoes-container"></div>
                 <div style="display: flex; gap: 10px; margin-top: 10px; margin-bottom: 20px;">
                     <button class="btn-outline" style="margin-top: 0;" onclick="addPosicaoForm()">+ Adicionar</button>
                     <button class="btn-danger" style="margin-top: 0;" onclick="removePosicaoForm()">- Remover</button>
                 </div>
                 <div class="form-group" style="border-top: 1px solid var(--border); padding-top: 16px;">
-                    <label>Piloto da Melhor Volta Absoluta (+1 Ponto Extra)</label>
-                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Preencha os tempos dos pilotos acima e isso será automático (você pode alterar).</div>
+                    <label>Piloto da Melhor Volta Absoluta (+1 Ponto)</label>
                     <select id="best-lap-piloto" style="margin-bottom: 10px;">
                         <option value="">Ninguém/Não registrado</option>
                     </select>
-                    <label>Tempo (ex: 58.123 ou 1:02.450)</label>
+                    <label>Tempo (ex: 58.123)</label>
                     <input type="text" id="best-lap-tempo" placeholder="00.000 ou 0:00.000">
                 </div>
-                <button onclick="salvarCorrida()">🏁 Registrar Resultado</button>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-salvar-corrida" onclick="salvarCorrida()">🏁 Registrar Resultado</button>
+                    <button id="btn-cancelar-edicao" onclick="cancelarEdicao()" class="btn-outline" style="display: none;">Cancelar Edição</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // ==========================================
     // 1. CONFIGURAÇÃO DO FIREBASE
-    // ==========================================
     const firebaseConfig = {
       apiKey: "AIzaSyBhiKl0SkfdQKIib6n9OVWtPeUodJJc3Js",
       authDomain: "f7-kart.firebaseapp.com",
@@ -312,14 +339,13 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // ==========================================
-    // 2. LÓGICA DO SISTEMA
-    // ==========================================
+    // 2. VARIÁVEIS GERAIS
     let pilotos = ["Fabrício", "Marcelino", "Souza", "Wanderley", "Douglas", "Lucas", "Perini"];
     let corridas = []; 
     let chartInstance = null;
     let pilotoTempoChartInstance = null;
     let qtdPosicoesForm = 0;
+    let corridaEmEdicaoIndex = -1; // -1 significa que estamos criando uma nova
 
     try {
         db.collection("f7kart").doc("temporada1").onSnapshot((doc) => {
@@ -328,52 +354,9 @@
                 corridas = doc.data().corridas || [];
             }
             
-            let precisaSalvarCorrecao = false;
-            
-            // 1. Corrige a lista de pilotos
-            if (pilotos.includes("Perine")) {
-                pilotos = pilotos.filter(p => p !== "Perine");
-                if (!pilotos.includes("Perini")) pilotos.push("Perini");
-                precisaSalvarCorrecao = true;
-            }
-
-            // 2. Transfere todos os pontos e históricos antigos para o novo nome e corrige o tempo do Wanderley
-            corridas.forEach(corrida => {
-                if (corrida.resultados && corrida.resultados["Perine"]) {
-                    corrida.resultados["Perini"] = corrida.resultados["Perine"];
-                    delete corrida.resultados["Perine"];
-                    precisaSalvarCorrecao = true;
-                }
-                if (corrida.vencedor === "Perine") {
-                    corrida.vencedor = "Perini";
-                    precisaSalvarCorrecao = true;
-                }
-                if (corrida.melhorVolta && corrida.melhorVolta.piloto === "Perine") {
-                    corrida.melhorVolta.piloto = "Perini";
-                    precisaSalvarCorrecao = true;
-                }
-
-                if (corrida.resultados && corrida.resultados["Wanderley"]) {
-                    if (corrida.resultados["Wanderley"].tempoStr === "55075") {
-                        corrida.resultados["Wanderley"].tempoStr = "55.075";
-                        corrida.resultados["Wanderley"].tempoNum = 55.075;
-                        precisaSalvarCorrecao = true;
-                    }
-                }
-                if (corrida.melhorVolta && corrida.melhorVolta.piloto === "Wanderley" && corrida.melhorVolta.tempoStr === "55075") {
-                    corrida.melhorVolta.tempoStr = "55.075";
-                    corrida.melhorVolta.tempoNum = 55.075;
-                    precisaSalvarCorrecao = true;
-                }
-            });
-
-            if (precisaSalvarCorrecao) {
-                salvarNoFirebase();
-            }
-            
             document.getElementById('dash-pilotos').innerText = pilotos.length;
             
-            if (qtdPosicoesForm === 0) {
+            if (qtdPosicoesForm === 0 && corridaEmEdicaoIndex === -1) {
                 for(let i=0; i<5; i++) addPosicaoForm();
             }
 
@@ -382,10 +365,7 @@
             atualizarHistoricoPiloto();
         }, (error) => {
             console.error("Erro ao carregar dados:", error);
-            if (error.code === 'permission-denied') {
-                alert("⚠️ Erro de Permissão no Firebase (Leia a mensagem anterior no chat).");
-            }
-            if (qtdPosicoesForm === 0) {
+            if (qtdPosicoesForm === 0 && corridaEmEdicaoIndex === -1) {
                 for(let i=0; i<5; i++) addPosicaoForm();
             }
             atualizarSelectsFormulario();
@@ -400,11 +380,7 @@
         db.collection("f7kart").doc("temporada1").set({
             pilotos: pilotos,
             corridas: corridas
-        }).catch((error) => {
-            if (error.code === 'permission-denied') {
-                 alert("⚠️ Erro de Permissão ao salvar.");
-            }
-        });
+        }).catch(error => console.error(error));
     }
 
     document.getElementById('data-corrida').valueAsDate = new Date();
@@ -456,7 +432,7 @@
                     </select>
                 </div>
                 <div class="piloto-lap-input">
-                    <label for="lap-${qtdPosicoesForm}">Tempo (Opcional):</label>
+                    <label for="lap-${qtdPosicoesForm}">Tempo:</label>
                     <input type="text" id="lap-${qtdPosicoesForm}" placeholder="ex: 58.123" onblur="autoPreencherMelhorVolta()">
                 </div>
             </div>
@@ -521,8 +497,11 @@
         }
     }
 
+    // FUNÇÃO ATUALIZADA (Cria Nova ou Salva a Edição)
     function salvarCorrida() {
         const dataCorrida = document.getElementById('data-corrida').value;
+        if (!dataCorrida) return alert("Selecione a data da corrida.");
+        
         const resultados = {};
         const selecionados = new Set();
         let vencedorDaCorrida = "---";
@@ -551,46 +530,138 @@
 
         const mvPiloto = document.getElementById('best-lap-piloto').value;
         let mvTempoNum = parseTimeStr(melhorTempoAbsolutoManual);
-
-        if (mvPiloto && melhorTempoAbsolutoManual && isNaN(mvTempoNum)) {
-             return alert("Formato de tempo da melhor volta absoluta inválido.");
-        }
-
         const melhorVolta = (mvPiloto && !isNaN(mvTempoNum)) ? { piloto: mvPiloto, tempoStr: melhorTempoAbsolutoManual, tempoNum: mvTempoNum } : null;
+        
         const partesData = dataCorrida.split('-');
-        const dataFormatada = partesData.length === 3 ? `${partesData[2]}/${partesData[1]}` : `Corrida ${corridas.length + 1}`;
+        const dataFormatada = `${partesData[2]}/${partesData[1]}`;
+        const dataIso = dataCorrida; // Usado para ordenar secretamente
 
-        corridas.push({ data: dataFormatada, resultados, melhorVolta, vencedor: vencedorDaCorrida });
-        
-        for (let i = 1; i <= qtdPosicoesForm; i++) {
-            if(document.getElementById(`pos-${i}`)) document.getElementById(`pos-${i}`).value = "";
-            if(document.getElementById(`lap-${i}`)) document.getElementById(`lap-${i}`).value = "";
+        const novaCorrida = { data: dataFormatada, dataIso: dataIso, resultados, melhorVolta, vencedor: vencedorDaCorrida };
+
+        if (corridaEmEdicaoIndex >= 0) {
+            // Atualiza a corrida existente
+            corridas[corridaEmEdicaoIndex] = novaCorrida;
+            alert("Corrida atualizada com sucesso!");
+        } else {
+            // Adiciona nova
+            corridas.push(novaCorrida);
         }
-        document.getElementById('best-lap-piloto').value = "";
-        document.getElementById('best-lap-tempo').value = "";
+
+        // LIMPAR O FORMULÁRIO E CANCELAR MODO EDIÇÃO
+        cancelarEdicao();
         
+        // Antes de salvar no Firebase, ordena o array inteiro por data cronológica
+        corridas.sort((a, b) => {
+            let dateA = new Date(a.dataIso || "2024-01-01"); // Fallback caso seja antiga
+            let dateB = new Date(b.dataIso || "2024-01-01");
+            return dateA - dateB;
+        });
+
         salvarNoFirebase();
     }
 
-    function deletarCorrida(index) {
-        const senha = prompt("⚠️ Área Restrita: Digite a senha de administrador para apagar esta corrida:");
-        if (senha === null) return;
-        
-        if (senha === "@Amigoskart2026") {
-            if(confirm("Senha correta. Tem certeza que deseja APAGAR os dados desta corrida?")) {
-                corridas.splice(index, 1);
-                salvarNoFirebase();
-                alert("Corrida excluída com sucesso.");
-            }
+    // NOVA FUNÇÃO: INICIAR EDIÇÃO
+    function editarCorrida(index) {
+        const senha = prompt("⚠️ Área Restrita: Digite a senha para EDITAR esta corrida:");
+        if (senha !== "@Amigoskart2026") return alert("❌ Senha incorreta.");
+
+        corridaEmEdicaoIndex = index;
+        const corrida = corridas[index];
+
+        // Tentar preencher a data no calendário
+        if (corrida.dataIso) {
+            document.getElementById('data-corrida').value = corrida.dataIso;
         } else {
-            alert("❌ Senha incorreta. Ação cancelada.");
+            // Tenta adivinhar a data pelo DD/MM
+            const partes = corrida.data.split('/');
+            if (partes.length === 2) {
+                const anoAtual = new Date().getFullYear();
+                document.getElementById('data-corrida').value = `${anoAtual}-${partes[1]}-${partes[0]}`;
+            }
+        }
+
+        // Limpar o formulário atual
+        const container = document.getElementById('posicoes-container');
+        container.innerHTML = '';
+        qtdPosicoesForm = 0;
+
+        // Preencher as posições
+        const resultadosArray = [];
+        for (const piloto in corrida.resultados) {
+            resultadosArray.push({ piloto: piloto, dados: corrida.resultados[piloto] });
+        }
+        // Ordenar pela posição de chegada
+        resultadosArray.sort((a, b) => a.dados.posicao - b.dados.posicao);
+
+        resultadosArray.forEach(item => {
+            addPosicaoForm();
+            document.getElementById(`pos-${qtdPosicoesForm}`).value = item.piloto;
+            if (item.dados.tempoStr) {
+                document.getElementById(`lap-${qtdPosicoesForm}`).value = item.dados.tempoStr;
+            }
+        });
+
+        // Garantir que tenham pelo menos 5 campos vazios no final por padrão
+        if (qtdPosicoesForm < 5) {
+            let faltam = 5 - qtdPosicoesForm;
+            for(let i=0; i<faltam; i++) addPosicaoForm();
+        }
+
+        // Preencher Melhor Volta
+        if (corrida.melhorVolta) {
+            document.getElementById('best-lap-piloto').value = corrida.melhorVolta.piloto;
+            document.getElementById('best-lap-tempo').value = corrida.melhorVolta.tempoStr;
+        } else {
+            document.getElementById('best-lap-piloto').value = "";
+            document.getElementById('best-lap-tempo').value = "";
+        }
+
+        // Mudar o visual do botão
+        const btnSalvar = document.getElementById('btn-salvar-corrida');
+        btnSalvar.innerHTML = "⚠️ ATUALIZAR CORRIDA";
+        btnSalvar.className = "btn-warning";
+        document.getElementById('btn-cancelar-edicao').style.display = "block";
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelarEdicao() {
+        corridaEmEdicaoIndex = -1;
+        
+        // Limpar form
+        document.getElementById('data-corrida').valueAsDate = new Date();
+        const container = document.getElementById('posicoes-container');
+        container.innerHTML = '';
+        qtdPosicoesForm = 0;
+        for(let i=0; i<5; i++) addPosicaoForm();
+        document.getElementById('best-lap-piloto').value = "";
+        document.getElementById('best-lap-tempo').value = "";
+
+        // Resetar botão
+        const btnSalvar = document.getElementById('btn-salvar-corrida');
+        btnSalvar.innerHTML = "🏁 Registrar Resultado";
+        btnSalvar.className = "";
+        document.getElementById('btn-cancelar-edicao').style.display = "none";
+    }
+
+    function deletarCorrida(index) {
+        const senha = prompt("⚠️ Área Restrita: Digite a senha para APAGAR esta corrida:");
+        if (senha === "@Amigoskart2026") {
+            if(confirm("Tem certeza que deseja APAGAR os dados desta corrida?")) {
+                corridas.splice(index, 1);
+                cancelarEdicao(); // Previne salvar em cima de índice errado
+                salvarNoFirebase();
+                alert("Corrida excluída.");
+            }
+        } else if (senha !== null) {
+            alert("❌ Senha incorreta.");
         }
     }
 
+    // REGRA DE 3 = RISCO, 4 = EXCLUSÃO (Com proteção de novatos e Zera-faltas)
     function calcularEstatisticas() {
         const stats = {};
-        // Agora controlamos "comecou" (para novatos) e "faltasConsecutivas"
-        pilotos.forEach(p => stats[p] = { nome: p, pontosBase: 0, vitorias: 0, podios: 0, voltasRapidas: 0, pontosSuperTotais: 0, faltasConsecutivas: 0, comecou: false, excluidoPermanente: false, status: 'ativo' });
+        pilotos.forEach(p => stats[p] = { nome: p, pontosBase: 0, vitorias: 0, podios: 0, voltasRapidas: 0, pontosSuperTotais: 0, faltasConsecutivas: 0, estreou: false, status: 'ativo' });
 
         corridas.forEach((corrida) => {
             pilotos.forEach(p => {
@@ -598,23 +669,13 @@
                 const pos = (typeof res === 'object' && res !== null) ? res.posicao : res;
                 
                 if (!pos) {
-                    // Piloto não correu esta bateria
-                    // Só conta como falta se ele JÁ estreou no campeonato e não está excluído
-                    if (stats[p].comecou && !stats[p].excluidoPermanente) {
+                    if (stats[p].estreou) {
                         stats[p].faltasConsecutivas += 1;
-                        if (stats[p].faltasConsecutivas >= 5) {
-                            stats[p].excluidoPermanente = true;
-                        }
                     }
                 } else {
-                    // Piloto compareceu e correu!
-                    stats[p].comecou = true; // Salva que ele fez a estreia dele
+                    stats[p].estreou = true;
+                    stats[p].faltasConsecutivas = 0; // Zerou a falta consecutiva!
                     
-                    // Zera a contagem de faltas consecutivas (se ele não foi excluído antes)
-                    if (!stats[p].excluidoPermanente) {
-                        stats[p].faltasConsecutivas = 0;
-                    }
-
                     let pts = (pos <= 20) ? (21 - pos) : 0;
                     if (corrida.melhorVolta && corrida.melhorVolta.piloto === p) {
                         pts += 1;
@@ -627,21 +688,17 @@
             });
         });
 
+        // Define os status baseados nas faltas consecutivas (3 e 4)
         Object.values(stats).forEach(s => {
             s.pontosSuperTotais = s.pontosBase + s.vitorias + s.podios + s.voltasRapidas;
-            
-            // FORÇAR EXCLUSÃO DO DOUGLAS MANUALMENTE
-            if (s.nome === "Douglas") {
-                s.excluidoPermanente = true;
-            }
-
-            // Define o status final baseado na regra de exclusão e faltas consecutivas atuais
-            if (s.excluidoPermanente) {
-                s.status = 'excluido';
-            } else if (s.faltasConsecutivas === 3) {
-                s.status = 'risco';
-            }
+            if (s.faltasConsecutivas === 3) s.status = 'risco';
+            if (s.faltasConsecutivas >= 4) s.status = 'excluido';
         });
+
+        // 🚨 CANETADA (Forçar exclusão do Douglas) 🚨
+        if (stats["Douglas"]) {
+            stats["Douglas"].status = 'excluido';
+        }
 
         return Object.values(stats).sort((a, b) => {
             if (a.status === 'excluido' && b.status !== 'excluido') return 1;
@@ -652,6 +709,92 @@
             return b.voltasRapidas - a.voltasRapidas; 
         });
     }
+
+    function atualizarDashboard() {
+        if(pilotos.length === 0) return;
+        const rank = calcularEstatisticas();
+        
+        // 1. Atualizar Tabela Sprint F1
+        const tbody = document.getElementById('leaderboard-body');
+        tbody.innerHTML = '';
+        
+        rank.forEach((p, index) => {
+            let nomeDisplay = `<span class="f1-nome">${p.nome}</span>`;
+            let rowStyle = "";
+            let rankClass = "f1-pos";
+
+            if (p.status === 'risco') {
+                nomeDisplay += ' <span class="badge-risco" title="3 faltas seguidas. Exclusão na próxima!">⚠️ RISCO</span>';
+            } else if (p.status === 'excluido') {
+                nomeDisplay += ' <span class="badge-excluido">❌ EXCLUÍDO</span>';
+                rowStyle = "opacity: 0.4;";
+                rankClass = "f1-pos";
+                p.pontosSuperTotais = `<del>${p.pontosSuperTotais}</del>`;
+            }
+
+            tbody.innerHTML += `
+                <tr style="${rowStyle}">
+                    <td><div class="${rankClass}">${index + 1}</div></td>
+                    <td>${nomeDisplay}</td>
+                    <td class="f1-pontos">${p.pontosSuperTotais}</td>
+                    <td class="f1-stats">${p.pontosBase}</td>
+                    <td class="f1-stats">${p.vitorias}</td>
+                    <td class="f1-stats">${p.podios}</td>
+                    <td class="f1-stats">${p.voltasRapidas}</td>
+                </tr>
+            `;
+        });
+
+        // 2. Atualizar Histórico (Já vem ordenado por data pelo Array corridas)
+        const historyTbody = document.getElementById('history-body');
+        let recordista = "---", melhorTempoGeral = Infinity, melhorTempoStr = "Nenhum tempo";
+
+        if (corridas.length > 0) {
+            historyTbody.innerHTML = '';
+            corridas.forEach((c, index) => {
+                if (c.melhorVolta && c.melhorVolta.tempoNum < melhorTempoGeral) {
+                    melhorTempoGeral = c.melhorVolta.tempoNum;
+                    recordista = c.melhorVolta.piloto;
+                    melhorTempoStr = c.melhorVolta.tempoStr;
+                }
+                historyTbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: 600;">#${index + 1}</td>
+                        <td style="font-weight: bold; color: var(--accent);">${c.data}</td>
+                        <td style="font-weight: 500;">🥇 ${c.vencedor}</td>
+                        <td style="color: var(--text-muted); font-size: 13px;">${c.melhorVolta ? `⏱️ ${c.melhorVolta.tempoStr} (${c.melhorVolta.piloto})` : 'Não reg.'}</td>
+                        <td>
+                            <button class="btn-outline" style="padding: 6px; font-size: 12px; margin: 0; width: auto; margin-right: 5px;" onclick="editarCorrida(${index})">✏️ Editar</button>
+                            <button class="btn-danger" style="padding: 6px; font-size: 12px; margin: 0; width: auto;" onclick="deletarCorrida(${index})">🗑️ Apagar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            let liderAtivo = rank.find(p => p.status !== 'excluido');
+            document.getElementById('dash-leader').innerText = liderAtivo ? liderAtivo.nome : "---";
+            document.getElementById('dash-leader-pts').innerText = liderAtivo ? `${liderAtivo.pontosSuperTotais} pts totais` : "0 pts";
+
+            let ativos = rank.filter(p => p.status !== 'excluido');
+            const maiorVencedor = ativos.length > 0 ? ativos.sort((a, b) => b.vitorias - a.vitorias)[0] : null;
+            document.getElementById('dash-wins').innerText = (maiorVencedor && maiorVencedor.vitorias > 0) ? maiorVencedor.nome : "---";
+            document.getElementById('dash-wins-count').innerText = (maiorVencedor && maiorVencedor.vitorias > 0) ? `${maiorVencedor.vitorias} Vitórias` : "0 Vitórias";
+
+            document.getElementById('dash-laps').innerText = recordista;
+            document.getElementById('dash-laps-count').innerText = melhorTempoStr !== "Nenhum tempo" ? `⏱️ ${melhorTempoStr}` : melhorTempoStr;
+        } else {
+            historyTbody.innerHTML = `<tr><td colspan="5" style="color: var(--text-muted); text-align: center;">Nenhuma corrida registrada.</td></tr>`;
+            document.getElementById('dash-leader').innerText = "---";
+            document.getElementById('dash-wins').innerText = "---";
+            document.getElementById('dash-laps').innerText = "---";
+        }
+
+        atualizarGrafico(rank);
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // O RESTO DO CÓDIGO (GRÁFICOS, HISTÓRICO DE PILOTO E PDF) PERMANECE O MESMO QUE O ANTERIOR
+    // ------------------------------------------------------------------------------------------
 
     function atualizarHistoricoPiloto() {
         const pilotoSelecionado = document.getElementById('select-historico-piloto').value;
@@ -731,88 +874,9 @@
         const ctx = document.getElementById('pilotoTempoChart').getContext('2d');
         if(pilotoTempoChartInstance) pilotoTempoChartInstance.destroy();
         pilotoTempoChartInstance = new Chart(ctx, {
-            type: 'line',
-            data: { labels: labels, datasets: [{ label: `Melhor Tempo - ${nome}`, data: dados, borderColor: '#34c759', backgroundColor: 'rgba(52, 199, 89, 0.1)', borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#ffffff', tension: 0.3, fill: true }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { title: { display: true, text: 'Segundos (Menos é Melhor)', font: {size: 11} }, grid: { color: '#f2f2f7' }, ticks: { callback: function(value) { return formatTimeNum(value); } } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return `Tempo: ${formatTimeNum(context.raw)}`; } } } } }
+            type: 'line', data: { labels: labels, datasets: [{ label: `Melhor Tempo`, data: dados, borderColor: '#34c759', backgroundColor: 'rgba(52, 199, 89, 0.1)', borderWidth: 2, pointRadius: 4, fill: true }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
-    }
-
-    function atualizarDashboard() {
-        if(pilotos.length === 0) return;
-        const rank = calcularEstatisticas();
-        
-        const tbody = document.getElementById('leaderboard-body');
-        tbody.innerHTML = '';
-        rank.forEach((p, index) => {
-            let medalha = index === 0 && p.status !== 'excluido' ? 'pos-1' : index === 1 && p.status !== 'excluido' ? 'pos-2' : index === 2 && p.status !== 'excluido' ? 'pos-3' : (index === 3 || index === 4) && p.status !== 'excluido' ? 'pos-45' : '';
-            
-            let nomeDisplay = p.nome;
-            let rowStyle = "";
-            let pointsStyle = "font-weight: bold; color: var(--accent); font-size: 16px;";
-
-            if (p.status === 'risco') {
-                nomeDisplay += ' <span class="badge-risco" title="Faltou 3 vezes consecutivas. Será desclassificado na próxima falta!">⚠️ Em Risco</span>';
-            } else if (p.status === 'excluido') {
-                nomeDisplay += ' <span class="badge-excluido" title="Desclassificado do campeonato (4 faltas consecutivas).">❌ Excluído</span>';
-                rowStyle = "opacity: 0.6; background-color: #fafafa;";
-                pointsStyle = "font-weight: bold; color: var(--text-muted); font-size: 16px; text-decoration: line-through;";
-                medalha = ""; 
-            }
-
-            tbody.innerHTML += `
-                <tr style="${rowStyle}">
-                    <td class="${medalha}">${index + 1}º</td>
-                    <td style="font-weight: 500;">${nomeDisplay}</td>
-                    <td style="${pointsStyle}">${p.pontosSuperTotais}</td>
-                    <td style="color: var(--text-muted);">${p.pontosBase}</td>
-                    <td>${p.vitorias}</td>
-                    <td>${p.podios}</td>
-                    <td>${p.voltasRapidas}</td>
-                </tr>
-            `;
-        });
-
-        const historyTbody = document.getElementById('history-body');
-        let recordista = "---", melhorTempoGeral = Infinity, melhorTempoStr = "Nenhum tempo";
-
-        if (corridas.length > 0) {
-            historyTbody.innerHTML = '';
-            corridas.forEach((c, index) => {
-                if (c.melhorVolta && c.melhorVolta.tempoNum < melhorTempoGeral) {
-                    melhorTempoGeral = c.melhorVolta.tempoNum;
-                    recordista = c.melhorVolta.piloto;
-                    melhorTempoStr = c.melhorVolta.tempoStr;
-                }
-                historyTbody.innerHTML += `
-                    <tr>
-                        <td style="font-weight: 600;">#${index + 1}</td>
-                        <td>${c.data}</td>
-                        <td style="font-weight: 500;">🥇 ${c.vencedor}</td>
-                        <td style="color: var(--text-muted); font-size: 13px;">${c.melhorVolta ? `⏱️ ${c.melhorVolta.tempoStr} (${c.melhorVolta.piloto})` : 'Não reg.'}</td>
-                        <td><button class="btn-danger" style="padding: 6px; font-size: 12px; margin: 0; width: auto;" onclick="deletarCorrida(${index})">Apagar</button></td>
-                    </tr>
-                `;
-            });
-
-            let liderAtivo = rank.find(p => p.status !== 'excluido');
-            document.getElementById('dash-leader').innerText = liderAtivo ? liderAtivo.nome : "---";
-            document.getElementById('dash-leader-pts').innerText = liderAtivo ? `${liderAtivo.pontosSuperTotais} pts totais` : "0 pts";
-
-            let ativos = rank.filter(p => p.status !== 'excluido');
-            const maiorVencedor = ativos.length > 0 ? ativos.sort((a, b) => b.vitorias - a.vitorias)[0] : null;
-            document.getElementById('dash-wins').innerText = (maiorVencedor && maiorVencedor.vitorias > 0) ? maiorVencedor.nome : "---";
-            document.getElementById('dash-wins-count').innerText = (maiorVencedor && maiorVencedor.vitorias > 0) ? `${maiorVencedor.vitorias} Vitórias` : "0 Vitórias";
-
-            document.getElementById('dash-laps').innerText = recordista;
-            document.getElementById('dash-laps-count').innerText = melhorTempoStr !== "Nenhum tempo" ? `⏱️ ${melhorTempoStr}` : melhorTempoStr;
-        } else {
-            historyTbody.innerHTML = `<tr><td colspan="5" style="color: var(--text-muted); text-align: center;">Nenhuma corrida registrada.</td></tr>`;
-            document.getElementById('dash-leader').innerText = "---";
-            document.getElementById('dash-wins').innerText = "---";
-            document.getElementById('dash-laps').innerText = "---";
-        }
-
-        atualizarGrafico(rank);
     }
 
     function atualizarGrafico(rank) {
@@ -825,27 +889,19 @@
                 const res = c.resultados[piloto];
                 const pos = (typeof res === 'object' && res !== null) ? res.posicao : res;
                 let pts = (pos && pos <= 20) ? (21 - pos) : 0;
-                
-                if (c.melhorVolta && c.melhorVolta.piloto === piloto) pts += 2;
+                if (c.melhorVolta && c.melhorVolta.piloto === piloto) pts += 1;
                 if (pos === 1) pts += 1;
                 if (pos >= 1 && pos <= 5) pts += 1;
-                
                 acumulado += pts;
                 return acumulado;
             });
-            return { label: piloto, data: data, borderColor: colors[i % colors.length], backgroundColor: '#ffffff', borderWidth: 3, pointBorderColor: colors[i % colors.length], pointBackgroundColor: '#ffffff', pointBorderWidth: 2, pointRadius: 5, pointHoverRadius: 7, tension: 0.2, fill: false };
+            return { label: piloto, data: data, borderColor: colors[i % colors.length], borderWidth: 3, tension: 0.2, fill: false };
         });
-
         if (chartInstance) chartInstance.destroy();
-        chartInstance = new Chart(ctx, {
-            type: 'line', data: { labels, datasets },
-            options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { beginAtZero: true, suggestedMax: datasets.length > 0 ? Math.max(...datasets.flatMap(d => d.data)) + 5 : 20, grid: { color: '#f2f2f7', drawBorder: false }, title: { display: true, text: 'Pontos Totais (Com Bônus)'} }, x: { grid: { display: false } } }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { size: 12 } } }, tooltip: { backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#1d1d1f', bodyColor: '#1d1d1f', borderColor: '#e5e5ea', borderWidth: 1, padding: 12, boxPadding: 6, usePointStyle: true, titleFont: { size: 14, weight: 'bold' }, bodyFont: { size: 13 }, itemSort: function(a, b) { return b.raw - a.raw; } } } }
-        });
+        chartInstance = new Chart(ctx, { type: 'line', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false } });
     }
 
-    // ==========================================
-    // 3. GERAÇÃO DE PDF PROFISSIONAL (ESTILO F1)
-    // ==========================================
+    // PDF LADO A LADO PERFEITO (Grid CSS ao invés de table layout)
     function exportarPDF() {
         const btn = document.getElementById('btn-export-pdf');
         const btnOriginalText = btn.innerHTML;
@@ -855,36 +911,28 @@
         const rank = calcularEstatisticas(); 
         const dataAtual = new Date().toLocaleDateString('pt-BR');
         
-        // 1. Tabela de Classificação Geral (Página 1)
         let leaderboardHTML = rank.map((p, index) => {
             let style = p.status === 'excluido' ? 'opacity: 0.5; text-decoration: line-through;' : '';
             return `
-                <tr style="border-bottom: 1px solid #ddd; ${style};">
-                    <td style="padding: 8px 12px; font-weight: bold;">${index + 1}º</td>
-                    <td style="padding: 8px 12px; font-weight: bold; font-size: 14px;">${p.nome} ${p.status === 'risco' ? '(Risco)' : p.status === 'excluido' ? '(Excluído)' : ''}</td>
-                    <td style="padding: 8px 12px; font-weight: bold; color: #e10600; font-size: 16px;">${p.pontosSuperTotais}</td>
-                    <td style="padding: 8px 12px;">${p.vitorias}</td>
-                    <td style="padding: 8px 12px;">${p.podios}</td>
-                    <td style="padding: 8px 12px;">${p.voltasRapidas}</td>
+                <tr style="border-bottom: 1px solid #ddd; ${style}; page-break-inside: avoid;">
+                    <td style="padding: 6px 10px; font-weight: bold;">${index + 1}º</td>
+                    <td style="padding: 6px 10px; font-weight: bold; font-size: 14px;">${p.nome} ${p.status === 'risco' ? '(Risco)' : p.status === 'excluido' ? '(Excluído)' : ''}</td>
+                    <td style="padding: 6px 10px; font-weight: bold; color: #e10600; font-size: 15px;">${p.pontosSuperTotais}</td>
+                    <td style="padding: 6px 10px;">${p.vitorias}</td>
+                    <td style="padding: 6px 10px;">${p.podios}</td>
+                    <td style="padding: 6px 10px;">${p.voltasRapidas}</td>
                 </tr>
             `;
         }).join('');
 
-        // 2. Foto do Gráfico Geral (Página 2) 
         const canvasGeral = document.getElementById('evolutionChart');
-        let chartGeralImgHTML = '';
-        if (canvasGeral) {
-            chartGeralImgHTML = `<img src="${canvasGeral.toDataURL('image/png', 1.0)}" style="width: 100%; height: auto; max-height: 160mm; object-fit: contain; background: white;">`;
-        }
+        let chartGeralImgHTML = canvasGeral ? `<img src="${canvasGeral.toDataURL('image/png', 1.0)}" style="width: 100%; max-height: 140mm; object-fit: contain;">` : '';
 
-        // 3. PÁGINAS DOS PILOTOS
         let relatorioPilotosHTML = '';
 
-        rank.forEach((pilotoData, index) => {
+        rank.forEach((pilotoData) => {
             let pilotoNome = pilotoData.nome;
-            
-            // Tabela do Piloto
-            let historyHTML = corridas.map((c, idx) => {
+            let historyHTML = corridas.map((c, index) => {
                 const res = c.resultados[pilotoNome];
                 const pos = (typeof res === 'object' && res !== null) ? res.posicao : res;
                 let teveMelhorVolta = (c.melhorVolta && c.melhorVolta.piloto === pilotoNome);
@@ -893,171 +941,95 @@
                 if (pos || teveMelhorVolta) {
                     let pts = (pos && pos <= 20) ? (21 - pos) : 0;
                     if (teveMelhorVolta) pts += 1;
-                    return `
-                        <tr style="border-bottom: 1px solid #eee;">
-                            <td style="padding: 8px 10px; font-weight: bold; width: 10%;">#${idx + 1}</td>
-                            <td style="padding: 8px 10px; width: 25%;">${c.data}</td>
-                            <td style="padding: 8px 10px; font-weight: bold; width: 15%;">${pos ? pos + 'º' : '-'}</td>
-                            <td style="padding: 8px 10px; font-weight: bold; color: #0071e3; width: 20%;">${pts}</td>
-                            <td style="padding: 8px 10px; width: 30%;">⏱️ ${tempoStr} ${teveMelhorVolta ? '<span style="color: #b26800; font-size: 10px;">⭐</span>' : ''}</td>
-                        </tr>
-                    `;
+                    return `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 4px; font-weight: bold;">#${index + 1}</td><td style="padding: 4px;">${c.data}</td><td style="padding: 4px; font-weight: bold;">${pos ? pos + 'º' : '-'}</td><td style="padding: 4px; font-weight: bold; color: #0071e3;">${pts}</td><td style="padding: 4px;">${tempoStr}</td></tr>`;
                 } else {
-                    return `
-                        <tr style="border-bottom: 1px solid #eee; background-color: #fff0f0;">
-                            <td style="padding: 8px 10px; font-weight: bold;">#${idx + 1}</td>
-                            <td style="padding: 8px 10px;">${c.data}</td>
-                            <td style="padding: 8px 10px; color: #e10600; font-weight: bold;">FALTOU</td>
-                            <td style="padding: 8px 10px;">0</td>
-                            <td style="padding: 8px 10px;">---</td>
-                        </tr>
-                    `;
+                    return `<tr style="border-bottom: 1px solid #ddd; background-color: #fff0f0;"><td style="padding: 4px; font-weight: bold;">#${index + 1}</td><td style="padding: 4px;">${c.data}</td><td style="padding: 4px; color: #e10600; font-weight: bold;">FALTOU</td><td style="padding: 4px;">0</td><td style="padding: 4px;">---</td></tr>`;
                 }
             }).join('');
 
-            if (corridas.length === 0) historyHTML = `<tr><td colspan="5" style="padding: 10px; text-align: center;">Nenhuma corrida registrada.</td></tr>`;
+            if (corridas.length === 0) historyHTML = `<tr><td colspan="5" style="padding: 8px; text-align: center;">Nenhuma corrida.</td></tr>`;
 
-            // Gráfico do Piloto
             let temposIndividuais = [];
             let labelsTempos = [];
-            corridas.forEach((c, idx) => {
+            corridas.forEach((c, index) => {
                 const res = c.resultados[pilotoNome];
                 if(typeof res === 'object' && res !== null && res.tempoNum) {
                     temposIndividuais.push(res.tempoNum);
-                    labelsTempos.push(`Bat. ${idx+1}`); 
+                    labelsTempos.push(`Bat. ${index+1}`); 
                 }
             });
 
-            let chartIndividualImgHTML = '';
+            let chartIndividualImgHTML = '<div style="text-align: center; color: #86868b; font-size: 11px; margin-top: 20px;">Nenhum tempo.</div>';
             if (temposIndividuais.length > 0) {
                 const tempCanvas = document.createElement('canvas');
-                // Proporção ajustada para caber bem na coluna da esquerda
-                tempCanvas.width = 500; 
-                tempCanvas.height = 300; 
-                const ctx = tempCanvas.getContext('2d');
-                
-                new Chart(ctx, {
-                    type: 'line',
-                    data: { labels: labelsTempos, datasets: [{ data: temposIndividuais, borderColor: '#34c759', backgroundColor: 'rgba(52, 199, 89, 0.1)', borderWidth: 3, pointRadius: 5, pointBackgroundColor: '#ffffff', tension: 0.3, fill: true }] },
-                    options: { animation: false, responsive: false, scales: { y: { ticks: { callback: function(value) { return formatTimeNum(value); } } } }, plugins: { legend: { display: false } } }
-                });
-                
-                chartIndividualImgHTML = `<img src="${tempCanvas.toDataURL('image/png', 1.0)}" style="width: 100%; height: auto; border: 1px solid #eee; margin-top: 10px;">`;
+                tempCanvas.width = 600; tempCanvas.height = 350; 
+                new Chart(tempCanvas.getContext('2d'), { type: 'line', data: { labels: labelsTempos, datasets: [{ data: temposIndividuais, borderColor: '#34c759', backgroundColor: 'rgba(52, 199, 89, 0.1)', borderWidth: 3, pointRadius: 4, fill: true }] }, options: { animation: false, responsive: false, plugins: { legend: { display: false } } } });
+                chartIndividualImgHTML = `<img src="${tempCanvas.toDataURL('image/png', 1.0)}" style="width: 100%; object-fit: contain;">`;
             }
 
-            // O SEGREDRO: Cada piloto é um "bloco" absoluto que toma a página inteira (A4 Paisagem = 297mm x 210mm)
-            // Usamos CSS Grid para forçar o lado a lado sem quebras.
+            // O TRUQUE DO GRID AQUI (Lado a Lado blindado)
             relatorioPilotosHTML += `
                 <div class="html2pdf__page-break"></div>
-                <!-- Container fixo para garantir que tudo fique em 1 página -->
-                <div style="width: 277mm; min-height: 190mm; padding: 10px; box-sizing: border-box; background: white; margin: 0 auto;">
+                <div style="padding-top: 15px; width: 100%; height: 95vh; display: flex; flex-direction: column;">
+                    <h2 style="font-size: 20px; font-weight: 800; border-bottom: 2px solid #1d1d1f; padding-bottom: 5px; margin-bottom: 15px; text-transform: uppercase;">
+                        PILOTO: <span style="color: #0071e3;">${pilotoNome}</span>
+                    </h2>
                     
-                    <div style="border-bottom: 2px solid #1d1d1f; padding-bottom: 5px; margin-bottom: 20px;">
-                        <h2 style="font-size: 24px; font-weight: 800; margin: 0; text-transform: uppercase;">
-                            PILOTO: <span style="color: #0071e3;">${pilotoNome}</span>
-                            ${pilotoData.status === 'excluido' ? '<span style="color:#e10600; font-size: 16px;">(DESCLASSIFICADO)</span>' : ''}
-                        </h2>
-                    </div>
-                    
-                    <!-- GRID ESTRITO: 45% Esquerda, 55% Direita -->
-                    <div style="display: grid; grid-template-columns: 45% 55%; gap: 20px; align-items: start;">
-                        
-                        <!-- Lado Esquerdo: Gráfico -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-grow: 1; align-items: start;">
+                        <!-- ESQUERDA (Gráfico) -->
                         <div>
-                            <div style="background: #1d1d1f; color: white; padding: 6px 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; font-style: italic;">📉 Curva de Desempenho</div>
-                            ${chartIndividualImgHTML ? chartIndividualImgHTML : '<div style="text-align: center; margin-top: 20px; color: #86868b;">Nenhum tempo registrado.</div>'}
+                            <div style="background: #1d1d1f; color: white; padding: 4px 10px; font-size: 11px; font-weight: bold; text-transform: uppercase;">📉 Desempenho</div>
+                            ${chartIndividualImgHTML}
                         </div>
                         
-                        <!-- Lado Direito: Tabela -->
+                        <!-- DIREITA (Tabela) -->
                         <div>
-                            <div style="background: #1d1d1f; color: white; padding: 6px 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; font-style: italic;">📋 Histórico Completo</div>
-                            <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; background: #fafafa;">
-                                <thead>
-                                    <tr style="border-bottom: 2px solid #ddd;">
-                                        <th style="padding: 10px; color: #86868b;">BAT.</th>
-                                        <th style="padding: 10px; color: #86868b;">DATA</th>
-                                        <th style="padding: 10px; color: #86868b;">POS</th>
-                                        <th style="padding: 10px; color: #86868b;">PTS</th>
-                                        <th style="padding: 10px; color: #86868b;">TEMPO</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${historyHTML}
-                                </tbody>
+                            <div style="background: #1d1d1f; color: white; padding: 4px 10px; font-size: 11px; font-weight: bold; text-transform: uppercase;">📋 Histórico</div>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 10px; text-align: left;">
+                                <tr style="background: #f2f2f7; border-bottom: 2px solid #1d1d1f;">
+                                    <th style="padding: 4px;">Bat.</th><th style="padding: 4px;">Data</th><th style="padding: 4px;">Pos</th><th style="padding: 4px;">Pts</th><th style="padding: 4px;">Tempo</th>
+                                </tr>
+                                ${historyHTML}
                             </table>
                         </div>
-                        
                     </div>
                 </div>
             `;
         });
 
-        // Montagem Final do Documento
         const pdfContainer = document.createElement('div');
         pdfContainer.innerHTML = `
-            <div style="font-family: Helvetica, Arial, sans-serif; color: #1d1d1f; background: white;">
-                
-                <!-- PÁGINA 1: CLASSIFICAÇÃO -->
-                <div style="width: 277mm; min-height: 190mm; padding: 10px; box-sizing: border-box; margin: 0 auto;">
-                    <div style="border-bottom: 5px solid #e10600; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
-                        <div>
-                            <h1 style="font-size: 36px; font-weight: 900; font-style: italic; margin: 0; letter-spacing: -1.5px; text-transform: uppercase;">F7 KART</h1>
-                            <h2 style="font-size: 16px; font-weight: 800; margin: 0; color: #86868b; text-transform: uppercase; letter-spacing: 2px;">DOSSIÊ DO CAMPEONATO</h2>
-                        </div>
-                        <div style="text-align: right; color: #1d1d1f; font-size: 12px; font-weight: bold; text-transform: uppercase;">
-                            Emissão Oficial<br>
-                            <span style="color: #e10600; font-size: 14px;">${dataAtual}</span>
-                        </div>
-                    </div>
-                    
-                    <div style="background: #1d1d1f; color: white; padding: 8px 15px; font-size: 14px; font-weight: bold; text-transform: uppercase; font-style: italic;">🏆 Classificação Geral</div>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; margin-top: 10px;">
-                        <thead>
-                            <tr style="border-bottom: 3px solid #1d1d1f; background: #f2f2f7;">
-                                <th style="padding: 10px 12px; color: #86868b;">POS</th>
-                                <th style="padding: 10px 12px; color: #86868b;">PILOTO</th>
-                                <th style="padding: 10px 12px; color: #e10600;">PTS TOTAIS</th>
-                                <th style="padding: 10px 12px; color: #86868b;">VITÓRIAS</th>
-                                <th style="padding: 10px 12px; color: #86868b;">PÓDIOS</th>
-                                <th style="padding: 10px 12px; color: #86868b;">VOLTAS RÁPIDAS</th>
-                            </tr>
-                        </thead>
-                        <tbody>${leaderboardHTML}</tbody>
+            <div style="width: 100%; font-family: Helvetica, Arial, sans-serif; color: #1d1d1f; background: white;">
+                <!-- PÁGINA 1 -->
+                <div style="min-height: 180mm;">
+                    <div style="border-bottom: 5px solid #e10600; padding-bottom: 10px; margin-bottom: 15px;"><h1 style="font-size: 32px; font-weight: 900; font-style: italic; margin: 0; color: #e10600;">F7 KART</h1></div>
+                    <div style="background: #1d1d1f; color: white; padding: 6px 15px; font-weight: bold;">🏆 Classificação Geral</div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+                        <tr style="background: #f2f2f7; border-bottom: 3px solid #1d1d1f;">
+                            <th style="padding: 6px;">Pos</th><th style="padding: 6px;">Piloto</th><th style="padding: 6px;">Pts</th><th style="padding: 6px;">Vit</th><th style="padding: 6px;">Pod</th><th style="padding: 6px;">V.R</th>
+                        </tr>
+                        ${leaderboardHTML}
                     </table>
                 </div>
 
-                <!-- PÁGINA 2: GRÁFICO GERAL -->
+                <!-- PÁGINA 2 -->
                 <div class="html2pdf__page-break"></div>
-                <div style="width: 277mm; min-height: 190mm; padding: 10px; box-sizing: border-box; margin: 0 auto;">
-                    <div style="background: #1d1d1f; color: white; padding: 8px 15px; font-size: 14px; font-weight: bold; text-transform: uppercase; font-style: italic; margin-bottom: 20px;">📈 Evolução do Campeonato</div>
-                    <div style="text-align: center;">${chartGeralImgHTML}</div>
+                <div style="padding-top: 10px;">
+                    <div style="background: #1d1d1f; color: white; padding: 6px 15px; font-weight: bold; margin-bottom: 10px;">📈 Evolução</div>
+                    ${chartGeralImgHTML}
                 </div>
                 
-                <!-- PÁGINAS 3+: DOSSIÊ DOS PILOTOS -->
+                <!-- PÁGINAS PILOTOS -->
                 ${relatorioPilotosHTML}
-                
             </div>
         `;
 
-        // Opções forçadas para Modo Paisagem A4
-        const opt = {
-            margin:       10, 
-            filename:     `F7_Kart_Dossie_${dataAtual.replace(/\//g, '-')}.pdf`,
-            image:        { type: 'jpeg', quality: 1.0 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }, 
-            // pagebreak.mode css garante que a classe html2pdf__page-break seja respeitada rigorosamente
-            pagebreak:    { mode: 'css' } 
-        };
-
-        html2pdf().set(opt).from(pdfContainer).save().then(() => {
-            btn.innerHTML = btnOriginalText;
-            btn.disabled = false;
-        }).catch(err => {
-            console.error('Erro ao gerar PDF', err);
-            btn.innerHTML = btnOriginalText;
-            btn.disabled = false;
-            alert("Erro ao gerar o PDF. Tente novamente.");
+        html2pdf().set({
+            margin: [5, 5, 5, 5], filename: `F7_Kart_${dataAtual.replace(/\//g, '-')}.pdf`,
+            image: { type: 'jpeg', quality: 1.0 }, html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, pagebreak: { mode: ['css', 'legacy'] } 
+        }).from(pdfContainer).save().then(() => {
+            btn.innerHTML = btnOriginalText; btn.disabled = false;
         });
     }
 </script>
